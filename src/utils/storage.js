@@ -35,6 +35,7 @@ export function safeReadArray(key,fallback=[]){
   return Array.isArray(fallback)?fallback.filter(Boolean):[];
 }
 export function safeWrite(key,value){
+  if(cloudConfigured()&&key==='luxdecor-notifications-v12')return true;
   try{
     if(cloudConfigured()&&!cloudReady())throw Error('Banco remoto ainda não carregado.');
     const payload=key==='luxdecor-products-v12'&&Array.isArray(value)?value.map(compactProduct):value;
