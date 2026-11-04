@@ -4,9 +4,43 @@ import PageHeader from'../components/PageHeader';import Modal from'../components
 import{mergeLuxInventory,luxInventoryProducts}from'../data/luxInventory';
 export default function Stock({products,setProducts,movements=[],setMovements,sales=[]}){
  const[tab,setTab]=useState('overview'),[modal,setModal]=useState(null),[qty,setQty]=useState(1),[q,setQ]=useState(''),[filter,setFilter]=useState('all'),[invQ,setInvQ]=useState(''),[invFilter,setInvFilter]=useState('all'),[invLocation,setInvLocation]=useState('all'),[blindInventory,setBlindInventory]=useState(true),[transfer,setTransfer]=useState(null),[transferLocation,setTransferLocation]=useState(''),[showroom,setShowroom]=useState(null);
- const[importConfirm,setImportConfirm]=useState(false),[archiveTarget,setArchiveTarget]=useState(null),[actionProduct,setActionProduct]=useState(null),[statusConfirm,setStatusConfirm]=useState(null);
- const importInventory=()=>{if(!can('products.write'))return toast('Sem permissão para cadastrar produtos.','warning','Estoque');const result=mergeLuxInventory(products);if(!result.inserted)return toast('Os produtos da relação já estão cadastrados.','info','Estoque');setImportConfirm(true)};
- const confirmImportInventory=async ()=>{const result=mergeLuxInventory(products);if(!result.inserted){setImportConfirm(false);return}const tx=await commitLocalTransaction('lux-inventory-import',{[STORAGE_KEYS.products]:result.products});if(!tx.ok)return toast('Não foi possível gravar o inventário.','warning','Estoque');setProducts(result.products);setImportConfirm(false);addAudit('Relação de estoque importada','Estoque',result.inserted+' novos itens');toast(result.inserted+' produtos adicionados sem substituir os existentes.','success','Estoque')};
+ const[importConfirm,setImportConfirm]=useState(false),[archiveTarget,setArchiveTarget]=useState(null),[actionProduct,setActionProduct]=useState(null),[statusConfirm,setStatusConfirm]=useState(null),[deleteTarget,setDeleteTarget]=useState(null),[deleteConfirmation,setDeleteConfirmation]=useState('');
+ const deleteProtection=p=>{
+  const reasons=[];
+  if(Number(p.stock)||Number(p.reserved))reasons.push('O produto ainda tem estoque físico ou unidades reservadas');
+  const keys=[STORAGE_KEYS.sales,STORAGE_KEYS.movements,STORAGE_KEYS.orders,STORAGE_KEYS.purchases,STORAGE_KEYS.invoices,STORAGE_KEYS.held];
+  const references=[...new Set([p.id,p.sku].filter(Boolean).map(String))];
+  for(const key of keys){
+    const data=key===STORAGE_KEYS.sales?sales:key===STORAGE_KEYS.movements?movements:safeRead(key,[]);
+    const records=Array.isArray(data)?data:[];
+    const found=records.some(record=>{
+      if(!record||typeof record!=='object')return false;
+      const row=JSON.stringify(record);
+      return references.some(ref=>row.includes(JSON.stringify(ref)));
+    });
+    if(found)reasons.push('Há registros vinculados em '+({[STORAGE_KEYS.sales]:'vendas',[STORAGE_KEYS.movements]:'movimentações',[STORAGE_KEYS.orders]:'pedidos',[STORAGE_KEYS.purchases]:'compras',[STORAGE_KEYS.invoices]:'documentos fiscais',[STORAGE_KEYS.held]:'vendas suspensas'}[key]||'histórico'));
+  }
+  return reasons;
+ };
+ const deleteProduct=async()=>{
+  const p=deleteTarget;
+  if(!p)return;
+  if(currentRole()!=='Administrador')return toast('Somente o administrador pode excluir cadastros.','warning','Permissão');
+  const blockers=deleteProtection(p);
+  if(blockers.length)return toast('Não é possível excluir este produto. Use Arquivar.','warning','Estoque');
+  if(deleteConfirmation.trim()!==String(p.sku||p.name).trim())return toast('Digite o código do produto para confirmar.','warning','Confirmação');
+  const next=products.filter(x=>String(x.id)!==String(p.id));
+  // Impede que o importador da relação inicial recadastre automaticamente o item excluído.
+  const excluded=safeRead('luxdecor-deleted-seed-ids-v1',[]);
+  const blocked=[...new Set([...(Array.isArray(excluded)?excluded:[]),String(p.id)])];
+  const tx=await commitLocalTransaction('stock-delete-product',{[STORAGE_KEYS.products]:next,'luxdecor-deleted-seed-ids-v1':blocked});
+  if(!tx.ok)return toast('Exclusão não confirmada pelo banco. Nenhum item foi removido da tela.','warning','Estoque');
+  setProducts(next);setDeleteTarget(null);setDeleteConfirmation('');setActionProduct(null);
+  addAudit('Cadastro de produto excluído','Estoque',p.name+' · '+(p.sku||p.id));
+  toast('Cadastro excluído definitivamente do catálogo.','success','Estoque');
+ };
+ const importInventory=()=>{if(!can('products.write'))return toast('Sem permissão para cadastrar produtos.','warning','Estoque');const suppressed=new Set(safeRead('luxdecor-deleted-seed-ids-v1',[]));const merged=mergeLuxInventory(products);const result={products:merged.products.filter(p=>!suppressed.has(String(p.id))),inserted:merged.products.filter(p=>!suppressed.has(String(p.id))).length-products.length};if(!result.inserted)return toast('Os produtos da relação já estão cadastrados.','info','Estoque');setImportConfirm(true)};
+ const confirmImportInventory=async ()=>{const suppressed=new Set(safeRead('luxdecor-deleted-seed-ids-v1',[]));const merged=mergeLuxInventory(products);const result={products:merged.products.filter(p=>!suppressed.has(String(p.id))),inserted:merged.products.filter(p=>!suppressed.has(String(p.id))).length-products.length};if(!result.inserted){setImportConfirm(false);return}const tx=await commitLocalTransaction('lux-inventory-import',{[STORAGE_KEYS.products]:result.products});if(!tx.ok)return toast('Não foi possível gravar o inventário.','warning','Estoque');setProducts(result.products);setImportConfirm(false);addAudit('Relação de estoque importada','Estoque',result.inserted+' novos itens');toast(result.inserted+' produtos adicionados sem substituir os existentes.','success','Estoque')};
  const changeArchived=async(p,archive)=>{
   if(currentRole()!=='Administrador')return toast('Apenas o administrador pode arquivar ou restaurar produtos.','warning','Permissão');
   if(archive&&(Number(p.reserved)||0)>0)return toast('Há unidades reservadas. Libere as reservas antes de arquivar.','warning','Estoque');
@@ -51,6 +85,7 @@ export default function Stock({products,setProducts,movements=[],setMovements,sa
   else if(action==='order')toggleOrder(p);
   else if(action==='archive')setArchiveTarget(p);
   else if(action==='restore')restoreProduct(p);
+  else if(action==='delete'){setDeleteConfirmation('');setDeleteTarget(p)}
  };
  return <section className="page"><PageHeader title="Estoque" subtitle="Controle físico: disponível, reservado, movimentações, inventário, localização e reposição."/>
  <div className="lux-stock-import-bar"><div><b>Estoque Lux Decor · 04/11/2026</b><small>LUART, BOARETO, MAIS ESTOFADOS e showroom EDN. Quantidades não informadas precisam de conferência.</small></div><button type="button" onClick={importInventory}><PackageCheck size={16}/> Importar relação ({luxInventoryProducts.length} cadastros)</button></div>
@@ -74,9 +109,18 @@ export default function Stock({products,setProducts,movements=[],setMovements,sa
     <button onClick={()=>chooseAction(actionProduct,'showroom')}><Store size={18}/><span><b>{actionProduct.stockType==='Mostruário'?'Retirar do mostruário':'Marcar como mostruário'}</b><small>Identifica o produto como peça de exposição</small></span><ChevronRight size={16}/></button>
     <button onClick={()=>chooseAction(actionProduct,'order')}><Truck size={18}/><span><b>{actionProduct.madeToOrder?'Desativar encomendas':'Permitir venda sob encomenda'}</b><small>Controla se pode ser vendido sem pronta-entrega</small></span><ChevronRight size={16}/></button>
     {currentRole()==='Administrador'&&<button className="danger" onClick={()=>chooseAction(actionProduct,'archive')}><Trash2 size={18}/><span><b>Arquivar produto</b><small>Oculta do catálogo ativo, sem apagar o histórico</small></span><ChevronRight size={16}/></button>}
+    {currentRole()==='Administrador'&&<button className="danger" onClick={()=>chooseAction(actionProduct,'delete')}><Trash2 size={18}/><span><b>Excluir definitivamente</b><small>Somente itens sem estoque, reservas nem histórico de movimentação ou venda</small></span><ChevronRight size={16}/></button>}
    </>}
    {actionProduct.active===false&&currentRole()==='Administrador'&&<button onClick={()=>chooseAction(actionProduct,'restore')}><RotateCcw size={18}/><span><b>Restaurar produto</b><small>Reativa o cadastro e o acesso no estoque</small></span><ChevronRight size={16}/></button>}
+    {actionProduct.active===false&&currentRole()==='Administrador'&&<button className="danger" onClick={()=>chooseAction(actionProduct,'delete')}><Trash2 size={18}/><span><b>Excluir definitivamente</b><small>Disponível apenas quando não houver registros vinculados</small></span><ChevronRight size={16}/></button>}
   </div>
+ </Modal>}
+ {deleteTarget&&<Modal title="Excluir produto definitivamente" subtitle={deleteTarget.name} onClose={()=>{setDeleteTarget(null);setDeleteConfirmation('')}}>
+  <p className="lux-stock-action-help">A exclusão permanente só é permitida para um cadastro sem estoque, reservas, vendas, pedidos ou movimentações. Para preservar o histórico, use <b>Arquivar produto</b>.</p>
+  {deleteProtection(deleteTarget).length>0?
+   <div className="notice"><AlertTriangle size={17}/><div><b>Exclusão bloqueada</b><ul>{deleteProtection(deleteTarget).map((reason,i)=><li key={i}>{reason}</li>)}</ul><small>Esse produto pode ser arquivado sem perder registros anteriores.</small></div></div>
+   :<><label className="form-field"><span>Digite exatamente {deleteTarget.sku||deleteTarget.name} para confirmar</span><input autoFocus value={deleteConfirmation} onChange={e=>setDeleteConfirmation(e.target.value)} placeholder="Código ou nome do produto"/></label>
+   <div className="modal-actions"><button className="secondary" onClick={()=>setDeleteTarget(null)}>Cancelar</button><button className="primary" disabled={deleteConfirmation.trim()!==String(deleteTarget.sku||deleteTarget.name).trim()} onClick={deleteProduct}><Trash2 size={15}/>Excluir definitivamente</button></div></>}
  </Modal>}
  {statusConfirm&&<ConfirmDialog open={true} title={statusConfirm.kind==='showroom'?'Alterar condição de mostruário?':'Alterar venda sob encomenda?'} message={statusConfirm.kind==='showroom'?'O produto será marcado ou desmarcado como peça de exposição. A quantidade disponível não será alterada.':'Essa opção define se o produto poderá ser vendido sob encomenda. O estoque físico não será alterado.'} details={[statusConfirm.p.name,statusConfirm.p.sku||'Sem código']} confirmLabel="Confirmar alteração" onConfirm={confirmStatus} onCancel={()=>setStatusConfirm(null)}/>}
  {modal&&<Modal title={`${modal.type==='in'?'Entrada':'Saída'} de estoque`} onClose={()=>setModal(null)}><h3>{modal.p.name}</h3><p>Disponível: {available(modal.p)} un. · reservado: {modal.p.reserved||0} un.</p><label className="form-field"><span>Quantidade</span><input type="number" min="1" autoFocus value={qty} onChange={e=>setQty(e.target.value)}/></label><div className="modal-actions"><button className="primary" onClick={()=>move(modal.p,modal.type)}>Confirmar movimentação</button></div></Modal>}
