@@ -1023,3 +1023,27 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-stock-action-grid>button.danger b,.lux-stock-action-grid>button.danger>svg{color:#9e4442}
 @media(max-width:1050px){.lux-stock-actions{justify-content:flex-start}}
 @media(max-width:650px){.lux-stock-actions>button{font-size:10px;padding:6px 8px}.lux-stock-action-grid>button{padding:10px}}
+
+
+/* Lux Decor — cadastro independente e compacto de vendedoras */
+.lux-salespeople-page .lux-seller-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.lux-salespeople-page .lux-seller-actions button{min-height:33px!important;padding:7px 12px!important;font-size:11px!important;display:inline-flex;align-items:center;gap:6px}
+.lux-salespeople-panel{display:flex;flex-direction:column;gap:16px}
+.lux-salespeople-info{display:flex;align-items:flex-start;gap:10px;color:#244565}
+.lux-salespeople-info>div{display:flex;flex-direction:column;gap:3px}
+.lux-salespeople-info b{font-size:13px}
+.lux-salespeople-info p{margin:0;font-size:11px;color:#75859a;line-height:1.5}
+.lux-salespeople-list{display:flex;flex-direction:column;gap:9px}
+.lux-salespeople-row{display:grid;grid-template-columns:minmax(150px,2fr) 105px 110px 125px 135px 65px 34px;gap:8px;align-items:end;padding:12px;border:1px solid #e2e9f1;border-radius:8px;background:#fbfcfe}
+.lux-salespeople-row label:not(.lux-salespeople-active){display:flex;flex-direction:column;gap:5px;min-width:0}
+.lux-salespeople-row label span{font-size:10px;font-weight:600;color:#5e7289}
+.lux-salespeople-row input:not([type=checkbox]){width:100%;min-width:0;min-height:35px;padding:7px 9px;border:1px solid #d7e1eb;border-radius:5px;background:#fff;font-size:12px;color:#1d3c60}
+.lux-salespeople-active{display:flex;align-items:center;gap:5px;padding-bottom:10px;font-size:11px;color:#385879}
+.lux-salespeople-remove{min-height:35px;display:flex;align-items:center;justify-content:center;border:1px solid #f0d0ce;border-radius:5px;background:#fff9f9;color:#a34441;cursor:pointer}
+.lux-salespeople-empty{padding:30px;display:flex;flex-direction:column;gap:9px;align-items:center;border:1px dashed #cddbe9;border-radius:8px;color:#698099;text-align:center}
+.lux-salespeople-empty b{color:#264665;font-size:14px}
+.lux-salespeople-empty p{margin:0 0 6px;font-size:12px}
+.lux-salespeople-note{display:flex;align-items:center;gap:8px;font-size:11px;color:#586f86}
+.lux-salespeople-unsaved{font-size:11px;color:#9d6218;margin:0}
+@media(max-width:1100px){.lux-salespeople-row{grid-template-columns:repeat(3,minmax(0,1fr))}.lux-salespeople-name{grid-column:span 2}}
+@media(max-width:650px){.lux-salespeople-row{grid-template-columns:repeat(2,minmax(0,1fr))}.lux-salespeople-name{grid-column:1/-1}.lux-salespeople-row label span{font-size:10px}}
