@@ -48,16 +48,16 @@ export default function Settings(){
  const[fiscalProvider,setFiscalProvider]=useState(()=>localStorage.getItem('luxdecor-fiscal-provider')||'');
 
  const[dashMode,setDashMode]=useState(()=>localStorage.getItem('luxdecor-dashboard-mode')||'executive');
- const[commissionRate,setCommissionRate]=useState(()=>localStorage.getItem('luxdecor-commission-rate')??'');
- const[salesTarget,setSalesTarget]=useState(()=>localStorage.getItem('luxdecor-sales-target-monthly')??'');
+ const[commissionRate,setCommissionRate]=useState(()=>{const saved=localStorage.getItem('luxdecor-commission-rate');return saved===null||saved==='2'?'':saved});
+ const[salesTarget,setSalesTarget]=useState(()=>{const saved=localStorage.getItem('luxdecor-sales-target-monthly');return saved===null||saved==='0'?'':saved});
  const[salespeople,setSalespeople]=useState(()=>getSalespeople());
  const[managerPin,setManagerPin]=useState(()=>localStorage.getItem('luxdecor-manager-pin')||'1234');
- const[highWithdrawal,setHighWithdrawal]=useState(()=>localStorage.getItem('luxdecor-high-withdrawal-limit')??'');
- const[discountReasonThreshold,setDiscountReasonThreshold]=useState(()=>localStorage.getItem('luxdecor-discount-reason-threshold')??'');
- const[cardFeeCredit,setCardFeeCredit]=useState(()=>localStorage.getItem('luxdecor-card-fee-credit')??'');
- const[cardFeeDebit,setCardFeeDebit]=useState(()=>localStorage.getItem('luxdecor-card-fee-debit')??'');
- const[maxCreditInstallments,setMaxCreditInstallments]=useState(()=>localStorage.getItem('luxdecor-card-max-installments')??'');
- const[minCreditInstallment,setMinCreditInstallment]=useState(()=>localStorage.getItem('luxdecor-card-min-installment')??'');
+ const[highWithdrawal,setHighWithdrawal]=useState(()=>{const saved=localStorage.getItem('luxdecor-high-withdrawal-limit');return saved===null||saved==='1000'?'':saved});
+ const[discountReasonThreshold,setDiscountReasonThreshold]=useState(()=>{const saved=localStorage.getItem('luxdecor-discount-reason-threshold');return saved===null||saved==='5'?'':saved});
+ const[cardFeeCredit,setCardFeeCredit]=useState(()=>{const saved=localStorage.getItem('luxdecor-card-fee-credit');return saved===null||saved==='3.19'?'':saved});
+ const[cardFeeDebit,setCardFeeDebit]=useState(()=>{const saved=localStorage.getItem('luxdecor-card-fee-debit');return saved===null||saved==='1.49'?'':saved});
+ const[maxCreditInstallments,setMaxCreditInstallments]=useState(()=>{const saved=localStorage.getItem('luxdecor-card-max-installments');return saved===null||saved==='12'?'':saved});
+ const[minCreditInstallment,setMinCreditInstallment]=useState(()=>{const saved=localStorage.getItem('luxdecor-card-min-installment');return saved===null||saved==='0'?'':saved});
  const[audit,setAudit]=useState([]);
  const[diagnostic,setDiagnostic]=useState(()=>runIntegrityCheck());
  const[health,setHealth]=useState(()=>storageHealth());
