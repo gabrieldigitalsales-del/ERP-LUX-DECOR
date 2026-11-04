@@ -31,7 +31,7 @@ export default function Sidebar({page,setPage}){
     <nav>{(()=>{let last='';return navItems.filter(([id])=>canViewPage(id)).map(([id,label,Icon,group])=>{const show=group!==last;last=group;return <React.Fragment key={id}>{show&&<span className="nav-section-label">{group}</span>}<button onClick={()=>setPage(id)} className={`nav-item ${page===id?'active':''}`}><Icon size={18}/><span>{label}</span><ChevronRight className="nav-chevron" size={14}/></button></React.Fragment>})})()}</nav>
     <div className="sidebar-footer">
       <div className="company-pill">
-        <span className="status-dot"/><div><b>Lux Decor</b><small>Plataforma premium</small></div>
+        <span className="status-dot"/><div><b>Lux Decor</b></div>
       </div>
     </div>
   </aside>
