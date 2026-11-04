@@ -1,5 +1,5 @@
 import React,{useState}from'react';
-import{Eye,EyeOff,LockKeyhole,UserRound,Cloud,ShieldCheck}from'lucide-react';
+import{Eye,EyeOff,LockKeyhole,UserRound,ShieldCheck}from'lucide-react';
 import logo from'../assets/lux-logo.png';
 import nexor from'../assets/nexor-logo.png';
 import{signInCloud,signUpCloud,activateCloudAccount}from'../utils/cloudAuth';
@@ -27,7 +27,7 @@ export default function CloudLogin({onAuthenticated}){
  };
  return <div className="login-screen"><div className="login-card">
   <div className="login-brand"><img src={logo} alt="Lux Decor"/><span>GESTÃO EMPRESARIAL</span></div>
-  <div className="login-copy"><small><Cloud size={13}/> DADOS PROTEGIDOS NO SUPABASE</small>
+  <div className="login-copy">
   <h1>{mode==='activate'?'Ativar meu acesso':mode==='register'?'Criar conta Lux Decor':'Entrar no LUX DECOR ERP'}</h1>
   <p>{mode==='activate'?'A ativação é única e vincula sua conta à empresa.':'Use seu e-mail e sua senha pessoal. Os dados da loja ficam no servidor.'}</p></div>
   <form onSubmit={submit}>
