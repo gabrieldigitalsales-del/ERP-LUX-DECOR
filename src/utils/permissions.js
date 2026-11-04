@@ -18,4 +18,4 @@ export const PAGE_ACCESS={
   Financeiro:['dashboard','finance','reports','clients','suppliers'],
   Fiscal:['dashboard','finance','products','reports']
 };
-export function canViewPage(page,role=currentRole()){return(PAGE_ACCESS[role]||[]).includes(page)}
+export function canViewPage(page,role=currentRole()){const member=cloudConfigured()?getCloudSession()?.member:null;if(member&&member.is_active===false)return false;if(member&&Array.isArray(member.page_access)&&member.role===role)return member.page_access.includes(page);return(PAGE_ACCESS[role]||[]).includes(page)}
