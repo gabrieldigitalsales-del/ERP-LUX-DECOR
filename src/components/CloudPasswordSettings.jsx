@@ -19,8 +19,8 @@ export default function CloudPasswordSettings(){
   <p>Proteja seu acesso com uma senha pessoal. A alteração é feita no Supabase Auth.</p>
   <form className="settings-mini-grid" onSubmit={save}>
    <label className="form-field wide"><span>Senha atual</span><input type={show?'text':'password'} autoComplete="current-password" value={oldPassword} onChange={e=>setOldPassword(e.target.value)} required/></label>
-   <label className="form-field"><span>Nova senha</span><input type={show?'text':'password'} minLength={10} autoComplete="new-password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} required placeholder="Mínimo 10 caracteres"/></label>
-   <label className="form-field"><span>Confirmar nova senha</span><input type={show?'text':'password'} minLength={10} autoComplete="new-password" value={repeat} onChange={e=>setRepeat(e.target.value)} required/></label>
+   <label className="form-field"><span>Nova senha</span><input type={show?'text':'password'} minLength={6} autoComplete="new-password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} required placeholder="Mínimo 6 caracteres"/></label>
+   <label className="form-field"><span>Confirmar nova senha</span><input type={show?'text':'password'} minLength={6} autoComplete="new-password" value={repeat} onChange={e=>setRepeat(e.target.value)} required/></label>
    <button className="secondary" type="button" onClick={()=>setShow(x=>!x)}>{show?<EyeOff size={14}/>:<Eye size={14}/>} {show?'Ocultar':'Mostrar'} senha</button>
    <button className="primary" type="submit" disabled={busy}>{busy?'Salvando...':'Alterar senha'}</button>
   </form></div>;
