@@ -22,7 +22,7 @@ export async function loadCloudDocuments(){
  const page=await api('/rest/v1/erpluxdecor_documents?select=document_key,document_value,revision&tenant_owner_id=eq.'+encodeURIComponent(session.member.tenant_owner_id)+'&limit=1000',{token:session.access_token});
  records.clear();versions.clear();
  for(const doc of page||[]){records.set(doc.document_key,doc.document_value===null?null:String(doc.document_value));versions.set(doc.document_key,Number(doc.revision)||0)}
- lastError=null;loaded=true;show('ready');return records.size;
+ lastError=null;loaded=true;show('ready');window.dispatchEvent(new CustomEvent('erpluxdecor-cloud-reloaded'));return records.size;
 }
 export async function commitCloudDocuments(changes={}){
  if(!loaded)throw Error('O banco ainda não foi carregado.');
