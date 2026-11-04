@@ -1005,3 +1005,21 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 }
 .settings-grid > .settings-compact-card .form-field{margin-top:10px}
 .settings-grid > .settings-compact-card p{margin:10px 0 0;line-height:1.45}
+
+
+/* Lux Decor — ações de estoque simples e explicativas */
+.lux-stock-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.lux-stock-actions>button{display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid #dce4ed;background:#fff;color:#193b63;border-radius:6px;min-height:33px;padding:6px 9px;font-size:11px;font-weight:650;white-space:nowrap;cursor:pointer;transition:background .16s,border-color .16s}
+.lux-stock-actions>button:hover{background:#edf3fa;border-color:#b8cee4}
+.lux-stock-actions .lux-stock-manage-button{background:#f5f8fc;border-color:#cbd8e7}
+.lux-stock-action-help{font-size:12px;color:#64748b;line-height:1.5;margin:0 0 12px}
+.lux-stock-action-grid{display:grid;grid-template-columns:1fr;gap:7px}
+.lux-stock-action-grid>button{width:100%;display:grid;grid-template-columns:22px 1fr 18px;align-items:center;gap:12px;text-align:left;padding:12px 13px;border:1px solid #e1e7ef;border-radius:7px;background:#fff;color:#1f4169;cursor:pointer;transition:background .16s,border-color .16s}
+.lux-stock-action-grid>button:hover{background:#f5f8fc;border-color:#b9cfe5}
+.lux-stock-action-grid>button>span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.lux-stock-action-grid>button b{font-size:12px;color:#203f63}
+.lux-stock-action-grid>button small{font-size:11px;color:#6d7d91;line-height:1.4}
+.lux-stock-action-grid>button.danger{border-color:#f0d4d3;background:#fffafa}
+.lux-stock-action-grid>button.danger b,.lux-stock-action-grid>button.danger>svg{color:#9e4442}
+@media(max-width:1050px){.lux-stock-actions{justify-content:flex-start}}
+@media(max-width:650px){.lux-stock-actions>button{font-size:10px;padding:6px 8px}.lux-stock-action-grid>button{padding:10px}}
