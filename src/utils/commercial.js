@@ -25,8 +25,11 @@ export function getSalespeople(){
   const current=readJson(KEY),legacy=readJson(LEGACY);
   const source=Array.isArray(current)?current:Array.isArray(legacy)?legacy:[];
   let rows=source.map(asSeller).filter(Boolean);
-  if(localStorage.getItem(DEMO_CLEANED_KEY)!=='1'){
-    rows=rows.filter(x=>!DEMO_NAMES.has(normalizedName(x.name)));
+  // Também limpa backups antigos restaurados após a migração inicial.
+  const seededDemo=x=>DEMO_NAMES.has(normalizedName(x.name))&&['seller-1','seller-2'].includes(String(x.id));
+  const foundSeeded=rows.some(seededDemo);
+  rows=rows.filter(x=>!seededDemo(x));
+  if(localStorage.getItem(DEMO_CLEANED_KEY)!=='1'||foundSeeded){
     localStorage.setItem(KEY,JSON.stringify(rows));
     localStorage.setItem(LEGACY,JSON.stringify(rows.filter(x=>x.active!==false).map(x=>x.name)));
     localStorage.setItem(DEMO_CLEANED_KEY,'1');
