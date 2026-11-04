@@ -1,3 +1,4 @@
+import{erpStorage}from'../utils/storage';
 import React,{useEffect,useMemo,useRef,useState}from'react';
 import{
   Search,Plus,Minus,Trash2,ShoppingBag,WalletCards,Banknote,ReceiptText,LockKeyhole,UnlockKeyhole,
@@ -23,7 +24,7 @@ const paymentIcon={
   'Dinheiro':Banknote,'Pix':ScanLine,'Cartão de crédito':CreditCard,'Cartão de débito':CreditCard,
   'Transferência':Landmark,'Boleto':ReceiptText,'Crediário':NotebookText,'Crédito da loja':WalletCards
 };
-const getCommissionRate=()=>Number(localStorage.getItem('luxdecor-commission-rate')||2);
+const getCommissionRate=()=>Number(erpStorage.getItem('luxdecor-commission-rate')||2);
 const useLocal=(key,seed)=>{
   const[state,setState]=useState(()=>safeRead(key,seed));
   useEffect(()=>{safeWrite(key,state)},[key,state]);
@@ -33,7 +34,7 @@ const newId=()=>uid('cash');
 const BRAZIL_TZ='America/Sao_Paulo';
 const localDateCode=()=>new Intl.DateTimeFormat('en-CA',{timeZone:BRAZIL_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('-','');
 const formatLocalDateTime=(value=new Date())=>new Intl.DateTimeFormat('pt-BR',{timeZone:BRAZIL_TZ,dateStyle:'short',timeStyle:'medium'}).format(value instanceof Date?value:new Date(value));
-const receiptSettings=()=>({name:localStorage.getItem('luxdecor-company-name')||'Lux Decor',cnpj:localStorage.getItem('luxdecor-company-cnpj')||'',address:localStorage.getItem('luxdecor-company-address')||'',phone:localStorage.getItem('luxdecor-company-phone')||'',width:localStorage.getItem('luxdecor-receipt-width')||'80'});
+const receiptSettings=()=>({name:erpStorage.getItem('luxdecor-company-name')||'Lux Decor',cnpj:erpStorage.getItem('luxdecor-company-cnpj')||'',address:erpStorage.getItem('luxdecor-company-address')||'',phone:erpStorage.getItem('luxdecor-company-phone')||'',width:erpStorage.getItem('luxdecor-receipt-width')||'80'});
 
 export default function Cashier({sales,setSales,products,setProducts,clients,setClients,setFinance,setMovements,setInvoices}){
   const[session,setSession]=useLocal(STORAGE_KEYS.cashSession,null);
@@ -63,7 +64,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const[closeModal,setCloseModal]=useState(false);
   const[cashMove,setCashMove]=useState(null);
   const[openValue,setOpenValue]=useState('200');
-  const[terminal,setTerminal]=useState(()=>localStorage.getItem('luxdecor-cash-terminal')||'Caixa 01');
+  const[terminal,setTerminal]=useState(()=>erpStorage.getItem('luxdecor-cash-terminal')||'Caixa 01');
   const[closeValue,setCloseValue]=useState('');
   const[blindCloseRevealed,setBlindCloseRevealed]=useState(false);
   const[moveValue,setMoveValue]=useState('');
@@ -102,15 +103,15 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const discount=discountType==='percent'?Math.min(gross,gross*(Math.max(0,Math.min(100,Number(discountInput)||0))/100)):Math.min(gross,Math.max(0,Number(discountInput)||0));
   const discountPct=gross>0?discount/gross*100:0;
   const sellerLimit=seller?sellerDiscountLimit(seller,currentRole()):sellerDiscountLimit('',currentRole());
-  const reasonThreshold=Number(localStorage.getItem('luxdecor-discount-reason-threshold')||5);
+  const reasonThreshold=Number(erpStorage.getItem('luxdecor-discount-reason-threshold')||5);
   const total=Math.max(0,gross-discount);
-  const maxCreditInstallments=Math.max(1,Math.min(24,Number(localStorage.getItem('luxdecor-card-max-installments')||12)));
-  const minCreditInstallment=Math.max(0,Number(localStorage.getItem('luxdecor-card-min-installment')||0));
+  const maxCreditInstallments=Math.max(1,Math.min(24,Number(erpStorage.getItem('luxdecor-card-max-installments')||12)));
+  const minCreditInstallment=Math.max(0,Number(erpStorage.getItem('luxdecor-card-min-installment')||0));
   const paymentPreview=p=>{
     const amount=Number(p?.amount)||0;
     const installments=p?.type==='Cartão de crédito'?Math.max(1,Math.min(maxCreditInstallments,Number(p?.installments)||1)):p?.type==='Crediário'?Math.max(1,Math.min(24,Number(p?.installments)||1)):1;
     const isCredit=p?.type==='Cartão de crédito',isDebit=p?.type==='Cartão de débito';
-    const feeRate=isCredit?Number(localStorage.getItem('luxdecor-card-fee-credit')||3.19):isDebit?Number(localStorage.getItem('luxdecor-card-fee-debit')||1.49):0;
+    const feeRate=isCredit?Number(erpStorage.getItem('luxdecor-card-fee-credit')||3.19):isDebit?Number(erpStorage.getItem('luxdecor-card-fee-debit')||1.49):0;
     const fee=Number((amount*feeRate/100).toFixed(2));
     return{amount,installments,installmentValue:installments?Number((amount/installments).toFixed(2)):amount,feeRate,fee,net:Number((amount-fee).toFixed(2))};
   };
@@ -202,7 +203,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     const day=localDateCode();
     const sequence=cashLog.filter(x=>x.kind==='open'&&String(x.sessionCode||'').startsWith(`CX-${day}-`)).length+1;
     const sessionCode=`CX-${day}-${String(sequence).padStart(3,'0')}`;
-    localStorage.setItem('luxdecor-cash-terminal',terminal);const nextSession={id:newId(),sessionCode,opening,openedAt:now,status:'open',terminal,openedBy:operator};
+    erpStorage.setItem('luxdecor-cash-terminal',terminal);const nextSession={id:newId(),sessionCode,opening,openedAt:now,status:'open',terminal,openedBy:operator};
     const nextLog=[{id:newId(),sessionId:nextSession.id,sessionCode,kind:'open',amount:opening,at:now,operator},...cashLog];
     createLocalSnapshot('before-open-cash');
     if(!await writeCashState('open-cash',{session:nextSession,log:nextLog,held}))return;
@@ -345,7 +346,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(!can('cash.move'))return toast(`O perfil ${currentRole()} não pode fazer sangria/suprimento.`,'warning','Permissão');
     const value=Number(moveValue)||0;if(value<=0)return toast('Informe um valor válido.','warning','Caixa');
     if(!moveParty.trim())return toast(cashMove==='out'?'Informe o destino da sangria.':'Informe a origem do suprimento.','warning','Caixa');
-    const highLimit=Number(localStorage.getItem('luxdecor-high-withdrawal-limit')||1000);if(cashMove==='out'&&value>=highLimit&&!checkManagerPin(managerPinValue))return toast(`Sangria a partir de ${money(highLimit)} exige PIN gerencial.`,'warning','Autorização');
+    const highLimit=Number(erpStorage.getItem('luxdecor-high-withdrawal-limit')||1000);if(cashMove==='out'&&value>=highLimit&&!checkManagerPin(managerPinValue))return toast(`Sangria a partir de ${money(highLimit)} exige PIN gerencial.`,'warning','Autorização');
     if(cashMove==='out'&&value>expected)return toast('A sangria não pode ser maior que o dinheiro esperado no caixa.','warning','Sangria bloqueada');
     const now=new Date().toISOString();
     const nextLog=[{id:newId(),sessionId:session.id,sessionCode:session.sessionCode,terminal:session.terminal,kind:cashMove,amount:value,note:moveNote.trim(),party:moveParty.trim(),at:now,operator},...cashLog];
@@ -508,7 +509,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
 
     {reopenOpen&&<Modal title="Reabrir último caixa" subtitle="Operação administrativa com registro obrigatório." onClose={()=>setReopenOpen(false)}><div className="form-grid"><label className="form-field wide"><span>Justificativa</span><input autoFocus value={reopenReason} onChange={e=>setReopenReason(e.target.value)} placeholder="Ex.: divergência identificada após fechamento"/></label><label className="form-field wide"><span>PIN gerencial</span><input type="password" inputMode="numeric" value={reopenPin} onChange={e=>setReopenPin(e.target.value.replace(/\D/g,''))}/></label></div><div className="modal-actions"><button className="primary" onClick={reopenLastCash}>Reabrir sessão</button></div></Modal>}
 
-    {cashMove&&<Modal title={cashMove==='in'?'Suprimento de caixa':'Sangria de caixa'} subtitle="A movimentação será registrada no fechamento e na auditoria." onClose={()=>setCashMove(null)}><div className="form-grid"><label className="form-field"><span>Valor</span><input autoFocus type="number" min="0" value={moveValue} onChange={e=>setMoveValue(e.target.value)}/></label><label className="form-field"><span>{cashMove==='in'?'Origem':'Destino'}</span><select value={moveParty} onChange={e=>setMoveParty(e.target.value)}><option value="">Selecione</option>{(cashMove==='in'?['Troco inicial','Reforço de caixa','Devolução de sangria','Outro']:['Cofre','Banco','Retirada administrativa','Despesa','Outro']).map(x=><option key={x}>{x}</option>)}</select></label><label className="form-field wide"><span>Motivo / observação</span><input value={moveNote} onChange={e=>setMoveNote(e.target.value)} placeholder="Informe o motivo da movimentação"/></label>{cashMove==='out'&&Number(moveValue)>=Number(localStorage.getItem('luxdecor-high-withdrawal-limit')||1000)&&<label className="form-field wide"><span>PIN gerencial</span><input type="password" inputMode="numeric" value={managerPinValue} onChange={e=>setManagerPinValue(e.target.value.replace(/\D/g,''))}/></label>}</div><div className="modal-actions"><button className="primary" onClick={saveMove}>Confirmar movimentação</button></div></Modal>}
+    {cashMove&&<Modal title={cashMove==='in'?'Suprimento de caixa':'Sangria de caixa'} subtitle="A movimentação será registrada no fechamento e na auditoria." onClose={()=>setCashMove(null)}><div className="form-grid"><label className="form-field"><span>Valor</span><input autoFocus type="number" min="0" value={moveValue} onChange={e=>setMoveValue(e.target.value)}/></label><label className="form-field"><span>{cashMove==='in'?'Origem':'Destino'}</span><select value={moveParty} onChange={e=>setMoveParty(e.target.value)}><option value="">Selecione</option>{(cashMove==='in'?['Troco inicial','Reforço de caixa','Devolução de sangria','Outro']:['Cofre','Banco','Retirada administrativa','Despesa','Outro']).map(x=><option key={x}>{x}</option>)}</select></label><label className="form-field wide"><span>Motivo / observação</span><input value={moveNote} onChange={e=>setMoveNote(e.target.value)} placeholder="Informe o motivo da movimentação"/></label>{cashMove==='out'&&Number(moveValue)>=Number(erpStorage.getItem('luxdecor-high-withdrawal-limit')||1000)&&<label className="form-field wide"><span>PIN gerencial</span><input type="password" inputMode="numeric" value={managerPinValue} onChange={e=>setManagerPinValue(e.target.value.replace(/\D/g,''))}/></label>}</div><div className="modal-actions"><button className="primary" onClick={saveMove}>Confirmar movimentação</button></div></Modal>}
 
     {closeModal&&<Modal size="large" title="Fechamento de caixa" subtitle="Fechamento cego: conte primeiro, confira depois." onClose={()=>{setCloseModal(false);setBlindCloseRevealed(false)}}><div className="pdv-close-grid"><div className="pdv-close-summary">{!blindCloseRevealed?<div className="blind-close-note"><ShieldCheck size={22}/><b>Valores esperados ocultos</b><small>Informe o dinheiro contado para revelar a conferência.</small></div>:<><span>Fundo inicial <b>{money(session?.opening||0)}</b></span><span>Vendas da sessão <b>{money(sessionRevenue)}</b></span><span>Vendas em dinheiro <b>{money(cashSales)}</b></span><span>Suprimentos <b>{money(cashIn)}</b></span><span>Sangrias <b>- {money(cashOut)}</b></span><strong>Dinheiro esperado <em>{money(expected)}</em></strong><h4>Formas de pagamento</h4>{paymentSummary.map(([type,value])=><span key={type}>{type}<b>{money(value)}</b></span>)}</>}</div><div><label className="form-field"><span>Valor contado no caixa</span><input autoFocus type="number" min="0" value={closeValue} onChange={e=>setCloseValue(e.target.value)}/></label>{!blindCloseRevealed?<button className="pdv-modal-primary" onClick={()=>{if(closeValue==='')return toast('Informe o valor contado.','warning','Fechamento');setBlindCloseRevealed(true)}}><Eye size={17}/>CONFERIR VALORES</button>:<>{closeValue!==''&&<div className={`pdv-close-difference ${Number(closeValue)-expected===0?'ok':Number(closeValue)-expected>0?'positive':'negative'}`}><span>Diferença</span><b>{money(Number(closeValue)-expected)}</b></div>}<button className="pdv-modal-primary" onClick={closeCash}><LockKeyhole size={17}/>CONFIRMAR FECHAMENTO</button></>}</div></div></Modal>}
 
