@@ -320,13 +320,16 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
       const nextFinance=[...entries,...currentFinance];
       const nextClients=c!=='Consumidor final'?clients.map(x=>x.name===c?{...x,total:(Number(x.total)||0)+total,credit:Math.max(0,(Number(x.credit)||0)-storeCreditPart),lastPurchaseAt:now}:x):clients;
       const nextInv=[{id:uid('nf'),number:'',saleId:id,client:c,status:'Rascunho',amount:total,createdAt:now,items:cart,origin:'Caixa'},...currentInv];
-      if(deliveryRequired){const deliveries=safeRead('luxdecor-deliveries-v29',[]);safeWrite('luxdecor-deliveries-v29',[{id:uid('del'),saleId:id,client:c,date:isoToday(),window:'Horário a definir',address:clients.find(x=>x.name===c)?.address||'',phone:clients.find(x=>x.name===c)?.phone||'',status:'Agendada',items:cart,createdAt:now,autoCreated:true},...(Array.isArray(deliveries)?deliveries:[])]);}
+      const deliveries=deliveryRequired?safeRead('luxdecor-deliveries-v29',[]):[];
+      const nextDeliveries=deliveryRequired?[{id:uid('del'),saleId:id,client:c,date:isoToday(),window:'Horário a definir',address:clients.find(x=>x.name===c)?.address||'',phone:clients.find(x=>x.name===c)?.phone||'',status:'Agendada',items:cart,createdAt:now,autoCreated:true},...(Array.isArray(deliveries)?deliveries:[])]:null;
       const currentOrders=safeRead('luxdecor-orders-v217',[]);const nextOrders=[{id:uid('ord'),saleId:id,client:c,seller,operator,date:isoToday(),createdAt:now,updatedAt:now,items:cart,total,fulfillment:deliveryRequired?'Entrega':'Retirada',status:'Aguardando separação',source:'cashier'},...(Array.isArray(currentOrders)?currentOrders:[])];
       const nextCashLog=[{id:uid('cashlog'),sessionId:session.id,sessionCode:session.sessionCode,kind:'sale',saleId:id,amount:total,cashAmount:cashPart,payment:paymentLabel,paymentDetails:normalizedPayments,change,at:now,seller,operator},...cashLog];
 
       const tx=commitLocalTransaction(`cash-sale-${id}`,{
         [STORAGE_KEYS.sales]:nextSales,[STORAGE_KEYS.products]:nextProducts,[STORAGE_KEYS.finance]:nextFinance,
-        [STORAGE_KEYS.clients]:nextClients,[STORAGE_KEYS.movements]:nextMov,[STORAGE_KEYS.invoices]:nextInv,[STORAGE_KEYS.cashLog]:nextCashLog,[STORAGE_KEYS.orders]:nextOrders
+        [STORAGE_KEYS.clients]:nextClients,[STORAGE_KEYS.movements]:nextMov,[STORAGE_KEYS.invoices]:nextInv,
+        [STORAGE_KEYS.cashLog]:nextCashLog,[STORAGE_KEYS.orders]:nextOrders,
+        ...(deliveryRequired?{'luxdecor-deliveries-v29':nextDeliveries}:{})
       });
       if(!tx.ok)return toast('A venda foi revertida. Nenhum módulo ficou parcialmente atualizado.','warning','Transação protegida');
 
