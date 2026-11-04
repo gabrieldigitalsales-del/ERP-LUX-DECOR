@@ -23,8 +23,8 @@ export const cloudConfigured=()=>Boolean(BASE&&KEY);
 export const getCloudSession=()=>live||readSession();
 export function clearCloudSession(){live=null;sessionStorage.removeItem(SESSION)}
 async function memberFor(access_token,userId){
- const rows=await api('/rest/v1/erpluxdecor_members?select=user_id,tenant_owner_id,username,role,must_change_password&user_id=eq.'+encodeURIComponent(userId),{token:access_token});
- return Array.isArray(rows)?rows[0]||null:null;
+ const rows=await api('/rest/v1/erpluxdecor_members?select=user_id,tenant_owner_id,username,role,page_access,is_active,must_change_password&user_id=eq.'+encodeURIComponent(userId),{token:access_token});
+ const member=Array.isArray(rows)?rows[0]||null:null;return member?.is_active===false?null:member;
 }
 export async function restoreCloudSession(){
  const prev=getCloudSession();
@@ -40,6 +40,13 @@ export async function signInCloud(email,password){
  const auth=await api('/auth/v1/token?grant_type=password',{method:'POST',token:KEY,body:{email:email.trim().toLowerCase(),password}});
  const member=await memberFor(auth.access_token,auth.user.id);
  return keep({...auth,expires_at:Date.now()+auth.expires_in*1000,member});
+}
+export async function signInUsername(username,password){
+ const clean=String(username||'').trim().toLowerCase();
+ if(!/^[a-z0-9._-]{3,30}$/.test(clean))throw Error('Informe um usuário válido.');
+ const result=await signInCloud(clean+'@erpluxdecor.example',password);
+ if(!result.member)throw Error('Usuário sem acesso ativo à Lux Decor. Procure o administrador.');
+ return result;
 }
 export async function signUpCloud(email,password){
  if(password.length<6)throw Error('Use uma senha com pelo menos 6 caracteres.');
