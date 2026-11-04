@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "node scripts/critical-regression.mjs && vite build",
+    "build": "node scripts/critical-regression.mjs && node scripts/release-check.mjs && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "audit": "node scripts/static-audit.mjs",
     "test:release": "node scripts/release-check.mjs",
