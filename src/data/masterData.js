@@ -1,5 +1,3 @@
-import masterRows from './homeProductsMaster.json';
-
 const text=v=>String(v??'').trim();
 const keyPart=v=>text(v).toLocaleLowerCase('pt-BR');
 const nullable=v=>{const t=text(v);return t?t:null};
@@ -62,46 +60,3 @@ export function compactProduct(p={}){
   };
 }
 
-export function toAppProduct(r,index=0){
-  return hydrateProduct({
-    id:`imp-${r.id_importacao||String(index+1).padStart(5,'0')}`,
-    fornecedor:r.fornecedor??null,categoria:r.categoria??null,nome_produto:r.nome_produto??null,
-    sku_ref:r.sku_ref??null,cor_acabamento:r.cor_acabamento??null,tamanho_medida:r.tamanho_medida??null,
-    variante:r.variante??null,preco_final:money2(r.preco_final),observacoes:r.observacoes??null,
-    origem_tabela:r.origem_tabela??null,
-    stock:Math.max(1,Number(r.quantidade)||1),reserved:0,minStock:0,cost:0,unit:'UN',active:true,
-    ncm:'',ncmDescription:'',ncmVerified:false
-  });
-}
-
-export const masterProducts=masterRows.map(toAppProduct);
-export const masterSuppliers=[...new Set(masterRows.map(r=>r.fornecedor).filter(Boolean))]
-  .sort((a,b)=>a.localeCompare(b,'pt-BR'))
-  .map((name,i)=>({id:`sup-master-${String(i+1).padStart(2,'0')}`,name,doc:'',cnpj:'',phone:'',email:'',leadTime:0}));
-
-export function upsertMasterProducts(existing=[],options={}){
-  const source=Array.isArray(existing)?existing.map(hydrateProduct):[];
-  const withoutOldMaster=options.replaceMaster===true?source.filter(p=>!String(p?.id||'').startsWith('imp-')):source;
-  const cleaned=withoutOldMaster.filter(p=>p&&!isPlaceholderProduct(p));
-  const removedPlaceholders=withoutOldMaster.length-cleaned.length;
-  const removedOldMaster=source.length-withoutOldMaster.length;
-  const byKey=new Map(cleaned.map((p,i)=>[productImportKey(p),i]));
-  let inserted=0,updated=0;
-  for(const incoming of masterProducts){
-    const key=productImportKey(incoming),idx=byKey.get(key);
-    if(idx===undefined){byKey.set(key,cleaned.length);cleaned.push(incoming);inserted++;continue}
-    const old=cleaned[idx];
-    cleaned[idx]=hydrateProduct({
-      ...old,
-      // Existing records: update ONLY the three requested spreadsheet fields.
-      preco_final:incoming.preco_final,
-      observacoes:incoming.observacoes,
-      origem_tabela:incoming.origem_tabela,
-      price:incoming.preco_final??0,
-      notes:incoming.observacoes||'',
-      sourceTable:incoming.origem_tabela||''
-    });
-    updated++;
-  }
-  return {products:cleaned,inserted,updated,removedPlaceholders,removedOldMaster};
-}
