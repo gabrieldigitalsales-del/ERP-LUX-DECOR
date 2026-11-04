@@ -1,10 +1,10 @@
-import {compactProduct,hydrateProduct,upsertMasterProducts} from '../data/masterData';
+import {compactProduct,hydrateProduct} from '../data/masterData';
 import {mergeLuxInventory} from '../data/luxInventory';
 const masterSuppliers=[];
 const LEGACY_PREFIX='luxdecor-';
 const ERP_PREFIX='luxdecorerp-';
 const VERSION_KEY='luxdecor-app-schema-version';
-export const APP_SCHEMA_VERSION='2.18.5';
+export const APP_SCHEMA_VERSION='2.19.0';
 const isHomeKey=k=>Boolean(k&&(k.startsWith(LEGACY_PREFIX)||k.startsWith(ERP_PREFIX)));
 
 export function safeRead(key,fallback){
@@ -76,37 +76,6 @@ function cleanDemoAndTestData(){
   safeWrite('luxdecor-clients-v12',clients);safeWrite('luxdecor-suppliers-v12',suppliers);safeWrite('luxdecor-finance-v12',finance);safeWrite('luxdecor-sales-v12',sales);safeWrite('luxdecor-purchases-v12',purchases);safeWrite('luxdecor-nf-docs-v16',invoices);safeWrite('luxdecor-stock-log-v16',movements);safeWrite('luxdecor-notifications-v12',notifications);safeWrite('luxdecor-cash-log-v23',cashLog);
   return {clients:clients.length,suppliers:suppliers.length,finance:finance.length,sales:sales.length,purchases:purchases.length,invoices:invoices.length,movements:movements.length,notifications:notifications.length,cashLog:cashLog.length};
 }
-function migrateTo2130(){
-  const existing=safeReadArray('luxdecor-products-v12',[]);
-  const result=upsertMasterProducts(existing);
-  safeWrite('luxdecor-products-v12',result.products);
-  const cleaned=cleanDemoAndTestData();
-  const report={
-    at:new Date().toISOString(),source:'BASE_MESTRA_PRODUTOS_HOME_INTERIORES.xlsx',
-    sourceRows:5036,placeholdersIgnoredFromSpreadsheet:64,duplicateRowsUpserted:286,
-    uniqueMasterRows:4686,inserted:result.inserted,updated:result.updated,
-    removedExistingPlaceholders:result.removedPlaceholders,totalProducts:result.products.length,
-    missingSupplier:[],cleanedModules:cleaned
-  };
-  safeWrite('luxdecorerp-product-import-report-v213',report);
-}
-
-function migrateTo2131(){
-  const existing=safeReadArray('luxdecor-products-v12',[]);
-  // Replace only the previous BASE MESTRA import. Manual/real products remain untouched.
-  const result=upsertMasterProducts(existing,{replaceMaster:true});
-  safeWrite('luxdecor-products-v12',result.products);
-  const report={
-    at:new Date().toISOString(),source:'BASE_MESTRA_PRODUTOS_HOME_INTERIORES.xlsx',
-    previousMasterRows:4686,consolidatedMasterRows:1609,repeatedNameGroups:743,
-    quantityRule:'Mesmo nome dentro do mesmo fornecedor = 1 produto com estoque igual ao número de ocorrências; demais = estoque 1',
-    removedPreviousMasterRows:result.removedOldMaster||0,inserted:result.inserted,updated:result.updated,
-    removedExistingPlaceholders:result.removedPlaceholders,totalProducts:result.products.length,missingSupplier:[]
-  };
-  safeWrite('luxdecorerp-product-import-report-v2131',report);
-}
-
-
 function migrateTo2132(){
   const before={finance:safeReadArray('luxdecor-finance-v12',[]).length,sales:safeReadArray('luxdecor-sales-v12',[]).length,purchases:safeReadArray('luxdecor-purchases-v12',[]).length};
   const cleaned=cleanDemoAndTestData();
@@ -220,7 +189,7 @@ export function bootstrapStorage(){
   try{
     for(const key of Object.keys(sessionStorage).filter(k=>k.startsWith('luxdecor__tx__'))){try{const tx=JSON.parse(sessionStorage.getItem(key)||'null');if(tx?.state==='preparing'&&tx.previous){for(const [k,raw] of Object.entries(tx.previous))raw===null?localStorage.removeItem(k):localStorage.setItem(k,raw)}sessionStorage.removeItem(key)}catch{}}
     const current=localStorage.getItem(VERSION_KEY);
-    if(current!==APP_SCHEMA_VERSION){createLocalSnapshot(`before-migration-${current||'legacy'}`);migrateTo2120();migrateTo2132();migrateTo2133();migrateTo2134();migrateTo2170();migrateLuxInventory();localStorage.setItem(VERSION_KEY,APP_SCHEMA_VERSION)}
+    if(current!==APP_SCHEMA_VERSION){createLocalSnapshot(`before-update-${current||'first-install'}`);if(!safeRead('luxdecor-inventory-initialized-v1',null))migrateLuxInventory();localStorage.setItem(VERSION_KEY,APP_SCHEMA_VERSION)}
   }catch(err){console.error('Falha na migração local',err)}
 }
 export function storageHealth(){
