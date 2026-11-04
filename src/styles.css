@@ -937,3 +937,30 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .login-copy small{display:flex;align-items:center;gap:5px}
 .login-card form select{display:block;width:100%;margin-top:5px;padding:12px;border:1px solid #d1dae4;border-radius:7px;color:#193654;background:#fff}
 @media(max-width:640px){.erp-cloud-status{left:12px;right:12px;bottom:12px;max-width:none}.erp-cloud-gate-card{padding:22px}.erp-cloud-gate{padding:12px}}
+
+
+/* Lux Decor • estoque e histórico operacional */
+.stock-archive-button{border-color:#f0d5d5!important;color:#9b4040!important;background:#fff8f8!important}
+.stock-archive-button:hover{background:#fbeaea!important}
+.lux-movement-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:12px 0 16px}
+.lux-movement-summary>div{display:flex;flex-direction:column;gap:6px;padding:17px;border:1px solid #e2e8f0;border-radius:9px;background:#fff}
+.lux-movement-summary small{font-size:11px;color:#657489}
+.lux-movement-summary strong{font-size:22px;font-weight:750;color:#19375a}
+.lux-movement-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:13px 0 16px}
+.lux-movement-toolbar .search{min-width:230px;flex:2}
+.lux-movement-toolbar select{min-width:155px;flex:1}
+.lux-movement-date{display:flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid #dce4ee;background:#fff;border-radius:7px;min-height:37px;color:#65768f}
+.lux-movement-date span{font-size:11px}
+.lux-movement-date input{border:0;background:transparent;outline:none;font-size:12px;max-width:130px;color:#263e59}
+.lux-movement-columns{display:grid!important;grid-template-columns:1fr 1.7fr .8fr 1.2fr 1.1fr auto!important;gap:12px!important;align-items:center}
+.lux-movement-columns small{display:block;margin-top:3px;color:#7b8a9b;font-size:10px}
+.lux-movement-type{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:650;color:#344d66}
+.lux-movement-type.in{color:#247252}.lux-movement-type.out,.lux-movement-type.archive{color:#a44340}
+.lux-movement-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:10px 0 15px}
+.lux-movement-details>div{border:1px solid #e4eaf2;background:#fafbfd;border-radius:7px;padding:11px;display:flex;flex-direction:column;gap:5px}
+.lux-movement-details small{color:#657489;font-size:10px}
+.lux-movement-details b{font-size:12px;overflow-wrap:anywhere}
+.lux-movement-details .wide{grid-column:1/-1}
+.lux-movement-hint{font-size:11px;color:#64758a;margin-top:15px;line-height:1.5}
+@media(max-width:1050px){.lux-movement-columns{min-width:930px}.lux-movements-page .list-panel{overflow-x:auto}}
+@media(max-width:650px){.lux-movement-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.lux-movement-toolbar .search{min-width:100%;flex-basis:100%}.lux-movement-toolbar select{min-width:46%}}
