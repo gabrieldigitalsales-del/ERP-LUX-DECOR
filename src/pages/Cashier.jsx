@@ -184,8 +184,8 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     setQty(id,item.qty+delta);
   };
 
-  const writeCashState=(label,{session:nextSession=session,log:nextLog=cashLog,held:nextHeld=held}={})=>{
-    const tx=commitLocalTransaction(label,{
+  const writeCashState=async (label,{session:nextSession=session,log:nextLog=cashLog,held:nextHeld=held}={})=>{
+    const tx=await commitLocalTransaction(label,{
       [STORAGE_KEYS.cashSession]:nextSession,
       [STORAGE_KEYS.cashLog]:nextLog,
       [STORAGE_KEYS.held]:nextHeld
@@ -194,7 +194,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     setSession(nextSession);setCashLog(nextLog);setHeld(nextHeld);return true;
   };
 
-  const openCash=()=>{
+  const openCash=async ()=>{
     if(!can('cash.open'))return toast(`O perfil ${currentRole()} não pode abrir caixa.`,'warning','Permissão');
     if(session)return toast('Já existe um caixa aberto.','warning','Caixa');
     const opening=Math.max(0,Number(openValue)||0);
@@ -205,7 +205,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     localStorage.setItem('luxdecor-cash-terminal',terminal);const nextSession={id:newId(),sessionCode,opening,openedAt:now,status:'open',terminal,openedBy:operator};
     const nextLog=[{id:newId(),sessionId:nextSession.id,sessionCode,kind:'open',amount:opening,at:now,operator},...cashLog];
     createLocalSnapshot('before-open-cash');
-    if(!writeCashState('open-cash',{session:nextSession,log:nextLog,held}))return;
+    if(!await writeCashState('open-cash',{session:nextSession,log:nextLog,held}))return;
     setOpenModal(false);setSeller('');
     addAudit('Caixa aberto','Caixa',`${operator} · abertura ${money(opening)}`);
     toast('Caixa aberto. PDV pronto para venda.','success','Caixa');
@@ -217,35 +217,35 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     setClient('Consumidor final');setSeller('');setNotes('');setPaymentRows([{type:'Dinheiro',amount:'',acquirer:'',nsu:'',installments:1}]);setCashReceived('');setDeliveryRequired(false);
   };
 
-  const holdSale=()=>{
+  const holdSale=async ()=>{
     if(!cart.length)return;
     const h={id:newId(),cart,client,discountType,discountInput,discount,total,notes,createdAt:new Date().toISOString(),seller,operator,sessionCode:session?.sessionCode};
     const nextHeld=[h,...held];
-    if(!writeCashState('hold-sale',{session,log:cashLog,held:nextHeld}))return;
+    if(!await writeCashState('hold-sale',{session,log:cashLog,held:nextHeld}))return;
     resetSale();setTab('held');setConfirmHold(false);
     addAudit('Venda suspensa','Caixa',`${money(total)} · ${units} unidade(s)`);
     toast('Venda suspensa e salva localmente.','info','Caixa');
   };
 
-  const resume=h=>{
+  const resume=async h=>{
     setCart(h.cart||[]);setClient(h.client||'Consumidor final');setSeller(h.seller||'');setDiscountType(h.discountType||'value');
     setDiscountInput(h.discountInput??h.discount??0);setNotes(h.notes||'');
     const nextHeld=held.filter(x=>x.id!==h.id);
-    writeCashState('resume-held-sale',{session,log:cashLog,held:nextHeld});
+    await writeCashState('resume-held-sale',{session,log:cashLog,held:nextHeld});
     setTab('sale');toast('Venda retomada.','info','Caixa');
   };
 
-  const deleteHeld=id=>{
+  const deleteHeld=async id=>{
     const nextHeld=held.filter(x=>x.id!==id);
-    if(writeCashState('delete-held-sale',{session,log:cashLog,held:nextHeld}))toast('Venda suspensa removida.','info','Caixa');
+    if(await writeCashState('delete-held-sale',{session,log:cashLog,held:nextHeld}))toast('Venda suspensa removida.','info','Caixa');
   };
 
-  const saveClient=()=>{
+  const saveClient=async ()=>{
     if(!newClient.name.trim())return toast('Informe o nome do cliente.','warning','Cliente');
     const id=uid('client');
     const c={id,name:newClient.name.trim(),doc:newClient.doc.trim(),phone:newClient.phone.trim(),total:0};
     const nextClients=[c,...clients];
-    const tx=commitLocalTransaction('cash-quick-client',{[STORAGE_KEYS.clients]:nextClients});
+    const tx=await commitLocalTransaction('cash-quick-client',{[STORAGE_KEYS.clients]:nextClients});
     if(!tx.ok)return toast('Não foi possível salvar o cliente.','warning','Cliente');
     setClients?.(nextClients);setClient(c.name);setNewClient({name:'',doc:'',phone:''});setClientOpen(false);
     addAudit('Cliente rápido criado','Caixa',c.name);toast('Cliente cadastrado e selecionado.','success','Cliente');
@@ -278,7 +278,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(type==='Dinheiro')setCashReceived(total.toFixed(2));
   };
 
-  const finalize=()=>{
+  const finalize=async ()=>{
     if(finalizing)return;
     if(!can('sales.create'))return toast(`O perfil ${currentRole()} não pode concluir vendas.`,'warning','Permissão');
     if(!session)return toast('Abra o caixa primeiro.','warning','Caixa');
@@ -325,7 +325,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
       const currentOrders=safeRead('luxdecor-orders-v217',[]);const nextOrders=[{id:uid('ord'),saleId:id,client:c,seller,operator,date:isoToday(),createdAt:now,updatedAt:now,items:cart,total,fulfillment:deliveryRequired?'Entrega':'Retirada',status:'Aguardando separação',source:'cashier'},...(Array.isArray(currentOrders)?currentOrders:[])];
       const nextCashLog=[{id:uid('cashlog'),sessionId:session.id,sessionCode:session.sessionCode,kind:'sale',saleId:id,amount:total,cashAmount:cashPart,payment:paymentLabel,paymentDetails:normalizedPayments,change,at:now,seller,operator},...cashLog];
 
-      const tx=commitLocalTransaction(`cash-sale-${id}`,{
+      const tx=await commitLocalTransaction(`cash-sale-${id}`,{
         [STORAGE_KEYS.sales]:nextSales,[STORAGE_KEYS.products]:nextProducts,[STORAGE_KEYS.finance]:nextFinance,
         [STORAGE_KEYS.clients]:nextClients,[STORAGE_KEYS.movements]:nextMov,[STORAGE_KEYS.invoices]:nextInv,
         [STORAGE_KEYS.cashLog]:nextCashLog,[STORAGE_KEYS.orders]:nextOrders,
@@ -340,7 +340,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     }finally{setFinalizing(false)}
   };
 
-  const saveMove=()=>{
+  const saveMove=async ()=>{
     if(!session)return toast('Não há caixa aberto.','warning','Caixa');
     if(!can('cash.move'))return toast(`O perfil ${currentRole()} não pode fazer sangria/suprimento.`,'warning','Permissão');
     const value=Number(moveValue)||0;if(value<=0)return toast('Informe um valor válido.','warning','Caixa');
@@ -349,13 +349,13 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(cashMove==='out'&&value>expected)return toast('A sangria não pode ser maior que o dinheiro esperado no caixa.','warning','Sangria bloqueada');
     const now=new Date().toISOString();
     const nextLog=[{id:newId(),sessionId:session.id,sessionCode:session.sessionCode,terminal:session.terminal,kind:cashMove,amount:value,note:moveNote.trim(),party:moveParty.trim(),at:now,operator},...cashLog];
-    if(!writeCashState(cashMove==='in'?'cash-supply':'cash-withdraw',{session,log:nextLog,held}))return;
+    if(!await writeCashState(cashMove==='in'?'cash-supply':'cash-withdraw',{session,log:nextLog,held}))return;
     addAudit(cashMove==='in'?'Suprimento de caixa':'Sangria de caixa','Caixa',`${money(value)} · ${moveNote||'sem observação'}`);
     setCashMove(null);setMoveValue('');setMoveNote('');setMoveParty('');setManagerPinValue('');
     toast(cashMove==='in'?'Suprimento registrado.':'Sangria registrada.','success','Caixa');
   };
 
-  const closeCash=()=>{
+  const closeCash=async ()=>{
     if(!session)return;
     if(!can('cash.close'))return toast(`O perfil ${currentRole()} não pode fechar o caixa.`,'warning','Permissão');
     if(closeValue==='')return toast('Informe o valor contado no caixa.','warning','Fechamento');
@@ -364,13 +364,13 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     const now=new Date().toISOString(),diff=actual-expected;
     const report={id:uid('closing'),sessionId:session.id,sessionCode:session.sessionCode,terminal:session.terminal,operator:session.openedBy||operator,openedAt:session.openedAt,closedAt:now,opening:Number(session.opening)||0,sessionRevenue,cashSales,cashIn,cashOut,expected,actual,difference:diff,paymentSummary,acquirerSummary,cardInstallmentSummary,sellerSummary,paymentFees:sessionFees,netExpected:sessionNet,transactions:sessionLogs.length};
     const nextLog=[{id:newId(),sessionId:session.id,sessionCode:session.sessionCode,kind:'close',amount:actual,expected,difference:diff,at:now,operator:session.openedBy||operator,sessionRevenue,report},...cashLog];
-    if(!writeCashState('close-cash',{session:null,log:nextLog,held}))return;
+    if(!await writeCashState('close-cash',{session:null,log:nextLog,held}))return;
     addAudit('Caixa fechado','Caixa',`${session.openedBy||operator} · esperado ${money(expected)} · contado ${money(actual)} · diferença ${money(diff)}`);
     setCloseReport(report);setCloseModal(false);setCloseValue('');setBlindCloseRevealed(false);resetSale();setOpenModal(true);
     toast(`Caixa fechado. Diferença: ${money(diff)}.`,'info','Fechamento');
   };
 
-  const reopenLastCash=()=>{const lastClose=cashLog.find(x=>x.kind==='close'&&x.report);if(!lastClose)return toast('Nenhum fechamento disponível para reabrir.','warning','Caixa');if(!checkManagerPin(reopenPin))return toast('PIN gerencial inválido.','warning','Autorização');if(!reopenReason.trim())return toast('Informe a justificativa da reabertura.','warning','Caixa');const r=lastClose.report,now=new Date().toISOString();const restored={id:r.sessionId||newId(),sessionCode:r.sessionCode||`REAB-${localDateCode()}`,opening:Number(r.opening)||0,openedAt:r.openedAt||now,status:'open',terminal:r.terminal||terminal,openedBy:r.operator||operator,reopenedAt:now,reopenReason:reopenReason.trim()};const nextLog=[{id:newId(),sessionId:restored.id,sessionCode:restored.sessionCode,kind:'reopen',amount:0,at:now,operator,reason:reopenReason.trim()},...cashLog];if(!writeCashState('reopen-cash',{session:restored,log:nextLog,held}))return;addAudit('Caixa reaberto','Caixa',`${restored.sessionCode} · ${reopenReason.trim()}`);setReopenOpen(false);setReopenPin('');setReopenReason('');setOpenModal(false);toast('Caixa reaberto com auditoria.','success','Caixa')};
+  const reopenLastCash=async ()=>{const lastClose=cashLog.find(x=>x.kind==='close'&&x.report);if(!lastClose)return toast('Nenhum fechamento disponível para reabrir.','warning','Caixa');if(!checkManagerPin(reopenPin))return toast('PIN gerencial inválido.','warning','Autorização');if(!reopenReason.trim())return toast('Informe a justificativa da reabertura.','warning','Caixa');const r=lastClose.report,now=new Date().toISOString();const restored={id:r.sessionId||newId(),sessionCode:r.sessionCode||`REAB-${localDateCode()}`,opening:Number(r.opening)||0,openedAt:r.openedAt||now,status:'open',terminal:r.terminal||terminal,openedBy:r.operator||operator,reopenedAt:now,reopenReason:reopenReason.trim()};const nextLog=[{id:newId(),sessionId:restored.id,sessionCode:restored.sessionCode,kind:'reopen',amount:0,at:now,operator,reason:reopenReason.trim()},...cashLog];if(!await writeCashState('reopen-cash',{session:restored,log:nextLog,held}))return;addAudit('Caixa reaberto','Caixa',`${restored.sessionCode} · ${reopenReason.trim()}`);setReopenOpen(false);setReopenPin('');setReopenReason('');setOpenModal(false);toast('Caixa reaberto com auditoria.','success','Caixa')};
 
   const printReceipt=sale=>{
     if(!sale)return;
@@ -402,7 +402,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     setReturnQty(qty);setReturnReason('');setReturnSale(sale);
   };
 
-  const confirmReturn=()=>{
+  const confirmReturn=async ()=>{
     if(!returnSale)return;
     const selected=(returnSale.items||[]).map(i=>({...i,returnQty:Math.max(0,Math.min(Number(i.qty)||0,Number(returnQty[i.productId])||0))})).filter(i=>i.returnQty>0);
     if(!selected.length)return toast('Selecione ao menos uma quantidade para devolver.','warning','Devolução');
@@ -424,7 +424,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     const nextMov=[...returnedItems.map(i=>({id:uid('mov'),type:'in',product:i.name,productId:i.productId,qty:i.qty,at:now,origin:`Devolução · Venda #${returnSale.id} · ${returnReason.trim()}`})),...currentMov];
     const nextFinance=[{id:uid('fin'),type:'pay',desc:`Devolução venda #${returnSale.id} - ${returnSale.client}`,amount:Number(refund.toFixed(2)),due:isoToday(),status:'paid',paidAmount:Number(refund.toFixed(2)),paidAt:now,category:'Estornos',costCenter:'Comercial',origin:`return:${returnSale.id}:${returnId}`,payment:returnSale.payment},...currentFinance];
     const creditPaid=(returnSale.paymentDetails||[]).filter(p=>p.type==='Crédito da loja').reduce((a,p)=>a+(Number(p.amount)||0),0);const creditRestore=returnSale.total?refund*(creditPaid/Number(returnSale.total)):0;const nextClients=returnSale.client!=='Consumidor final'?clients.map(c=>c.name===returnSale.client?{...c,total:Math.max(0,(Number(c.total)||0)-refund),credit:(Number(c.credit)||0)+creditRestore,lastReturnAt:now}:c):clients;
-    const tx=commitLocalTransaction(`return-${returnSale.id}-${returnId}`,{[STORAGE_KEYS.sales]:nextSales,[STORAGE_KEYS.products]:nextProducts,[STORAGE_KEYS.finance]:nextFinance,[STORAGE_KEYS.movements]:nextMov,[STORAGE_KEYS.clients]:nextClients});
+    const tx=await commitLocalTransaction(`return-${returnSale.id}-${returnId}`,{[STORAGE_KEYS.sales]:nextSales,[STORAGE_KEYS.products]:nextProducts,[STORAGE_KEYS.finance]:nextFinance,[STORAGE_KEYS.movements]:nextMov,[STORAGE_KEYS.clients]:nextClients});
     if(!tx.ok)return toast('A devolução foi revertida para preservar a consistência dos dados.','warning','Proteção local');
     setSales(nextSales);setProducts(nextProducts);setFinance?.(nextFinance);setMovements?.(nextMov);setClients?.(nextClients);
     addAudit('Devolução registrada','Caixa',`Venda #${returnSale.id} · ${money(refund)} · ${returnReason.trim()}`);
