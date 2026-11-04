@@ -1,6 +1,6 @@
 import {compactProduct,hydrateProduct} from '../data/masterData';
 import {cloudConfigured} from './cloudAuth';
-import {erpCloudStorage,cloudReady,commitCloudDocuments,queueCloudWrite} from '../services/cloudStore';
+import {erpCloudStorage,cloudReady,commitCloudDocuments,queueCloudWrite,flushCloudWrites} from '../services/cloudStore';
 const businessStorage=()=>cloudConfigured()?erpCloudStorage:localStorage;
 export const erpStorage={
  getItem:key=>businessStorage().getItem(key),
@@ -224,6 +224,7 @@ export async function commitLocalTransaction(label,changes={}){
   if(cloudConfigured()){
     try{
       const transformed=Object.fromEntries(Object.entries(changes).map(([key,value])=>[key,JSON.stringify(key==='luxdecor-products-v12'&&Array.isArray(value)?value.map(compactProduct):value)]));
+      await flushCloudWrites();
       await commitCloudDocuments(transformed);
       return{ok:true,txId:'cloud-'+Date.now()};
     }catch(error){return{ok:false,error}};
