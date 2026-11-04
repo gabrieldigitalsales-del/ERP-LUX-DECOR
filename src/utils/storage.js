@@ -1,9 +1,10 @@
 import {compactProduct,hydrateProduct,upsertMasterProducts} from '../data/masterData';
+import {mergeLuxInventory} from '../data/luxInventory';
 const masterSuppliers=[];
 const LEGACY_PREFIX='luxdecor-';
 const ERP_PREFIX='luxdecorerp-';
 const VERSION_KEY='luxdecor-app-schema-version';
-export const APP_SCHEMA_VERSION='2.18.3';
+export const APP_SCHEMA_VERSION='2.18.5';
 const isHomeKey=k=>Boolean(k&&(k.startsWith(LEGACY_PREFIX)||k.startsWith(ERP_PREFIX)));
 
 export function safeRead(key,fallback){
@@ -196,11 +197,30 @@ function migrateTo2170(){
   safeWrite('luxdecor-finance-v12',finance);
 }
 
+
+function migrateLuxInventory(){
+  const key='luxdecor-products-v12';
+  const current=safeReadArray(key,[]);
+  const sales=safeReadArray('luxdecor-sales-v12',[]);
+  const referenced=new Set(sales.flatMap(s=>(s?.items||[]).flatMap(item=>[String(item?.productId||''),String(item?.id||'')])).filter(Boolean));
+  const archived=current.filter(p=>String(p?.id||'').startsWith('imp-')&&!referenced.has(String(p.id)));
+  // Preserve an on-device backup before removing old Home spreadsheet imports.
+  if(archived.length){
+    const archiveKey='luxdecor__legacy_home_products_backup_20261104';
+    if(!localStorage.getItem(archiveKey)){
+      localStorage.setItem(archiveKey,JSON.stringify({savedAt:new Date().toISOString(),products:archived}));
+    }
+  }
+  const clean=current.filter(p=>!archived.includes(p));
+  const merged=mergeLuxInventory(clean);
+  if(!safeWrite(key,merged.products))throw new Error('Não foi possível persistir o catálogo Lux Decor.');
+  safeWrite('luxdecor-inventory-initialized-v1',{at:new Date().toISOString(),inserted:merged.inserted,archivedHome:archived.length,total:merged.products.length});
+}
 export function bootstrapStorage(){
   try{
     for(const key of Object.keys(sessionStorage).filter(k=>k.startsWith('luxdecor__tx__'))){try{const tx=JSON.parse(sessionStorage.getItem(key)||'null');if(tx?.state==='preparing'&&tx.previous){for(const [k,raw] of Object.entries(tx.previous))raw===null?localStorage.removeItem(k):localStorage.setItem(k,raw)}sessionStorage.removeItem(key)}catch{}}
     const current=localStorage.getItem(VERSION_KEY);
-    if(current!==APP_SCHEMA_VERSION){createLocalSnapshot(`before-migration-${current||'legacy'}`);migrateTo2120();migrateTo2130();migrateTo2131();migrateTo2132();migrateTo2133();migrateTo2134();migrateTo2170();localStorage.setItem(VERSION_KEY,APP_SCHEMA_VERSION)}
+    if(current!==APP_SCHEMA_VERSION){createLocalSnapshot(`before-migration-${current||'legacy'}`);migrateTo2120();migrateTo2132();migrateTo2133();migrateTo2134();migrateTo2170();migrateLuxInventory();localStorage.setItem(VERSION_KEY,APP_SCHEMA_VERSION)}
   }catch(err){console.error('Falha na migração local',err)}
 }
 export function storageHealth(){
