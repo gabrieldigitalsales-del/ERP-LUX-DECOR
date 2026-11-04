@@ -52,4 +52,10 @@ const boot=storage.split('export function bootstrapStorage(){')[1]?.split('expor
 assert.ok(boot.includes("if(!safeRead('luxdecor-inventory-initialized-v1',null))migrateLuxInventory()"),'Importação inicial deve acontecer uma única vez');
 assert.ok(!boot.includes('migrateTo2130()')&&!boot.includes('migrateTo2131()'),'Migrações Home não podem executar');
 assert.ok(!read('src/data/masterData.js').includes('homeProductsMaster.json'),'Catálogo Home não pode ser carregado');
-console.log('OK: regressão de vendedoras, persistência, produtos e migrações (12 verificações).');
+const stockCode=read('src/pages/Stock.jsx');
+assert.ok(stockCode.includes("filter(el=>String(el.value).trim()!=='')"),'Contagem de inventário em branco não pode virar zero');
+assert.ok(!stockCode.includes('window.confirm('),'Inventário não deve usar diálogo nativo');
+const cashierCode=read('src/pages/Cashier.jsx');
+assert.ok(!cashierCode.includes("safeWrite('luxdecor-deliveries-v29'"),'Entrega não pode ser gravada fora da transação da venda');
+assert.ok(cashierCode.includes("...(deliveryRequired?{'luxdecor-deliveries-v29':nextDeliveries}:{})"),'Entrega deve estar incluída na transação local');
+console.log('OK: testes de vendedoras, produto, inventário, PDV e migrações.');
