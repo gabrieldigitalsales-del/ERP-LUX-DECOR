@@ -874,3 +874,28 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-stock-import-bar small{font-size:11px;color:#59616c}
 .lux-stock-import-bar button{display:flex;align-items:center;gap:7px;padding:10px 12px;background:#163d74;color:white;border:0;border-radius:5px;cursor:pointer;white-space:nowrap}
 @media(max-width:720px){.lux-stock-import-bar{align-items:stretch;flex-direction:column}.lux-stock-import-bar button{justify-content:center}}
+
+
+/* Lux Decor • identidade premium • login e modais */
+.login-screen{background:radial-gradient(circle at 20% 10%,#eaf0f9 0%,transparent 40%),linear-gradient(145deg,#f7f9fc,#e9edf3)!important}
+.login-card{border:1px solid #dce3ed!important;border-radius:14px!important;box-shadow:0 28px 85px rgba(17,36,69,.12)!important}
+.login-brand{gap:18px!important;align-items:center!important}
+.login-brand img{width:180px!important;max-height:85px!important;height:auto!important;object-fit:contain!important;object-position:left center!important}
+.login-brand span{color:#5c6b81!important}
+.login-submit{background:#173c72!important;border-radius:7px!important;transition:background .18s ease,transform .18s ease!important}
+.login-submit:hover{background:#102b50!important;transform:translateY(-1px)}
+.login-input:focus-within{border-color:#204b88!important;box-shadow:0 0 0 3px rgba(32,75,136,.11)!important}
+.modal-backdrop.modal-centered-backdrop{background:rgba(8,24,47,.52)!important;backdrop-filter:blur(7px)!important}
+.modal.modal-centered{border:1px solid #dfe7f1!important;border-radius:13px!important;box-shadow:0 32px 90px rgba(9,27,53,.24)!important}
+.modal.modal-centered .modal-head{background:linear-gradient(110deg,#fff,#f7f9fd)!important;border-bottom:1px solid #e4eaf3!important;padding:15px 19px!important}
+.lux-modal-heading{display:flex;align-items:center;gap:14px;min-width:0!important}
+.lux-modal-heading>div{min-width:0}
+.lux-modal-brand{display:block;width:52px;height:46px;object-fit:contain;flex:none}
+.modal.modal-centered .modal-head h3{color:#162f54!important;font-size:16px!important;letter-spacing:-.01em}
+.modal.modal-centered .modal-head p{color:#6c7b8f!important;font-size:11px!important}
+.modal.modal-centered .modal-close{border-radius:8px!important;color:#25456f!important}
+.modal.modal-centered .modal-close:hover{background:#eaf1fa!important;border-color:#c8d8ec!important}
+.modal.modal-centered .modal-footer{background:#f9fbfd!important;border-color:#e4eaf3!important}
+.modal.modal-centered .modal-actions .primary,.modal.modal-centered .modal-footer .primary{background:#193e73!important;box-shadow:none!important}
+.modal.modal-centered input:focus,.modal.modal-centered select:focus,.modal.modal-centered textarea:focus{outline-color:#2c5c98!important;border-color:#2c5c98!important}
+@media(max-width:650px){.lux-modal-brand{width:42px;height:38px}.lux-modal-heading{gap:9px}.modal.modal-centered .modal-head{padding:12px 13px!important}.login-brand img{width:145px!important}}
