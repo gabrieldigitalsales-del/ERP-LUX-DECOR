@@ -12,8 +12,8 @@ export const cloudError=()=>lastError;
 export const subscribeCloud=fn=>{listeners.add(fn);return()=>listeners.delete(fn)};
 export const erpCloudStorage={
  getItem:key=>records.has(key)?records.get(key):null,
- setItem:(key,value)=>{if(!loaded)throw Error('Banco não foi carregado.');void queueCloudWrite({[key]:String(value)})},
- removeItem:key=>{if(!loaded)throw Error('Banco não foi carregado.');void queueCloudWrite({[key]:null})},
+ setItem:(key,value)=>{if(!loaded)throw Error('Banco não foi carregado.');const raw=String(value);if(records.get(key)===raw)return Promise.resolve();records.set(key,raw);return queueCloudWrite({[key]:raw})},
+ removeItem:key=>{if(!loaded)throw Error('Banco não foi carregado.');records.delete(key);return queueCloudWrite({[key]:null})},
  key:index=>[...records.keys()][index]||null,
  get length(){return records.size}
 };
