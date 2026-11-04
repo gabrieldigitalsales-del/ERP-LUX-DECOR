@@ -43,7 +43,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const[q,setQ]=useState('');
   const[category,setCategory]=useState('Todos');
   const[seller,setSeller]=useState('');
-  const[sellerOptions]=useState(()=>activeSalespeople());
+  const sellerOptions=activeSalespeople();
   const authSession=getLocalSession();
   const operator=authSession?.name||authSession?.username||currentRole();
   const[client,setClient]=useState('Consumidor final');
@@ -93,7 +93,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
       if(p.active===false)return false;
       if(category!=='Todos'&&p.category!==category)return false;
       if(!term)return true;
-      return `${p.name||''} ${p.sku||''} ${p.category||''} ${p.brand||''}`.toLowerCase().includes(term);
+      return `${p.name||''} ${p.sku||''} ${p.reference||''} ${p.category||''} ${p.brand||''} ${p.supplier||''} ${p.variant||''} ${p.color||''} ${p.sizeLabel||''}`.toLowerCase().includes(term);
     }).slice(0,60);
   },[products,q,category]);
 
@@ -154,10 +154,13 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   },[cart,total,session]);
 
   const availableFor=p=>Math.max(0,(Number(p?.stock)||0)-(Number(p?.reserved)||0));
+  const canSell=p=>Boolean(p?.active!==false&&(p.madeToOrder||(!p.inventoryPending&&availableFor(p)>0))&&Number(p.price)>0);
 
   const add=p=>{
     if(!session)return toast('Abra o caixa antes de iniciar uma venda.','warning','Caixa fechado');
     const available=availableFor(p);
+    if(p.inventoryPending&&!p.madeToOrder)return toast('Estoque ainda não conferido. Confirme a quantidade no módulo Estoque.','warning','Estoque pendente');
+    if(!(Number(p.price)>0))return toast('Defina o preço do produto no cadastro antes de vender.','warning','Preço pendente');
     if(available<=0&&!p.madeToOrder)return toast('Produto sem estoque disponível.','warning','Estoque');
     setCart(a=>{
       const hit=a.find(x=>String(x.productId)===String(p.id));
@@ -248,14 +251,15 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     addAudit('Cliente rápido criado','Caixa',c.name);toast('Cliente cadastrado e selecionado.','success','Cliente');
   };
 
-  const openCheckout=()=>{
+  const openCheckout=(preferredPayment='Dinheiro')=>{
     if(!session)return toast('Abra o caixa antes de vender.','warning','Caixa fechado');
     if(!cart.length)return toast('Adicione ao menos um produto.','warning','Venda');
     if(!seller)return toast('Selecione a vendedora responsável por esta venda.','warning','Vendedora');
     if(discountPct>sellerLimit+.001&&!checkManagerPin(managerPinValue))return toast(`Desconto acima de ${sellerLimit.toFixed(1)}% exige PIN gerencial.`,`warning`,'Desconto');
     if(discountPct>=reasonThreshold&&!discountReason.trim())return toast(`Informe a justificativa do desconto.`,`warning`,'Desconto');
     if(total<=0)return toast('O total da venda precisa ser maior que zero.','warning','Venda');
-    setPaymentRows([{type:'Dinheiro',amount:total.toFixed(2),acquirer:'',nsu:'',installments:1}]);setCashReceived(total.toFixed(2));setCheckoutOpen(true);
+    const type=typeof preferredPayment==='string'&&paymentOptions.includes(preferredPayment)?preferredPayment:'Dinheiro';
+    setPaymentRows([{type,amount:total.toFixed(2),acquirer:'',nsu:'',installments:1}]);setCashReceived(type==='Dinheiro'?total.toFixed(2):'');setCheckoutOpen(true);
   };
 
   const paymentTotal=paymentRows.reduce((s,x)=>s+(Number(x.amount)||0),0);
@@ -281,9 +285,11 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(!cart.length)return toast('Venda sem itens.','warning','Venda');
     if(!seller)return toast('Selecione a vendedora responsável por esta venda.','warning','Vendedora');
 
+    const invalidPrice=cart.find(i=>!(Number(i.price)>0));
+    if(invalidPrice)return toast(`Defina o preço de ${invalidPrice.name} antes de concluir a venda.`,'warning','Preço pendente');
     const lacking=cart.find(i=>{
       const p=products.find(x=>String(x.id)===String(i.productId));
-      return !p||(!p.madeToOrder&&availableFor(p)<i.qty);
+      return !p||(!p.madeToOrder&&(p.inventoryPending||availableFor(p)<i.qty));
     });
     if(lacking)return toast(`Estoque insuficiente para ${lacking.name}.`,'warning','Venda bloqueada');
     if(Math.abs(paymentTotal-total)>.01)return toast('A soma dos pagamentos precisa fechar exatamente o total da venda.','warning','Pagamento');
@@ -426,7 +432,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const clearSale=()=>{resetSale();setConfirmClear(false);toast('Venda atual limpa.','info','Caixa')};
 
   return <section className="page cashier-page cashier-v26">
-    <PageHeader title="Caixa / PDV" subtitle="Venda rápida com baixa automática no estoque, financeiro e preparação fiscal." action={session?<div className="action-row"><button className="secondary" onClick={()=>setCashMove('in')}><ArrowDownToLine size={16}/>Suprimento</button><button className="secondary" onClick={()=>setCashMove('out')}><ArrowUpFromLine size={16}/>Sangria</button><button className="primary" onClick={()=>setCloseModal(true)}><LockKeyhole size={16}/>Fechar caixa</button></div>:<div className="action-row"><button className="secondary" onClick={()=>setReopenOpen(true)}><RefreshCcw size={16}/>Reabrir último</button><button className="primary" onClick={()=>setOpenModal(true)}><UnlockKeyhole size={16}/>Abrir caixa</button></div>}/>
+    <PageHeader title="Caixa / PDV" subtitle="PDV simplificado para móveis e estofados · registros ainda armazenados neste navegador." action={session?<div className="action-row"><button className="secondary" onClick={()=>setCashMove('in')}><ArrowDownToLine size={16}/>Suprimento</button><button className="secondary" onClick={()=>setCashMove('out')}><ArrowUpFromLine size={16}/>Sangria</button><button className="primary" onClick={()=>setCloseModal(true)}><LockKeyhole size={16}/>Fechar caixa</button></div>:<div className="action-row"><button className="secondary" onClick={()=>setReopenOpen(true)}><RefreshCcw size={16}/>Reabrir último</button><button className="primary" onClick={()=>setOpenModal(true)}><UnlockKeyhole size={16}/>Abrir caixa</button></div>}/>
 
     <div className="pdv-topline">
       <div className={`pdv-session-card ${session?'is-open':'is-closed'}`}><span className="pdv-led"/><div><small>{session?'CAIXA ABERTO':'CAIXA FECHADO'}</small><b>{session?.terminal||'Caixa 01'}</b>{session?.sessionCode&&<em>{session.sessionCode}</em>}</div></div>
@@ -437,6 +443,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
       <div className="pdv-metric"><Banknote/><span><small>Dinheiro esperado</small><b>{money(expected)}</b></span></div>
     </div>
 
+    <div className="pdv-simple-guide"><span><b>1</b> Escolha os produtos</span><ChevronRight size={14}/><span><b>2</b> Informe vendedora e cliente</span><ChevronRight size={14}/><span><b>3</b> Receba e finalize</span></div>
     <div className="pdv-toolbar">
       <div className="cash-tabs pdv-tabs">
         <button className={tab==='sale'?'active':''} onClick={()=>setTab('sale')}><ShoppingBag size={16}/>Venda</button>
@@ -449,12 +456,12 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     {tab==='sale'&&<div className="pdv-workspace">
       <div className="pdv-left">
         <div className="panel pdv-search-panel">
-          <div className="pdv-search"><Barcode size={20}/><input ref={searchRef} value={q} onChange={e=>setQ(e.target.value)} placeholder="Leia o código, digite SKU ou pesquise pelo nome do produto" onKeyDown={e=>{if(e.key==='Enter'){const term=q.trim().toLowerCase();const exact=products.find(p=>p.active!==false&&((p.sku||'').toLowerCase()===term||(p.name||'').toLowerCase()===term));if(exact){add(exact);setQ('')}}}}/><button onClick={()=>{setQ('');searchRef.current?.focus()}} title="Limpar busca"><X size={16}/></button></div>
+          <div className="pdv-search"><Barcode size={20}/><input ref={searchRef} value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar por nome, modelo, cor, medida ou código (F4)" onKeyDown={e=>{if(e.key==='Enter'){const term=q.trim().toLowerCase();const exact=products.find(p=>p.active!==false&&((p.sku||'').toLowerCase()===term||(p.name||'').toLowerCase()===term));if(exact){add(exact);setQ('')}}}}/><button onClick={()=>{setQ('');searchRef.current?.focus()}} title="Limpar busca"><X size={16}/></button></div>
           <div className="pdv-categories">{categories.map(c=><button key={c} className={category===c?'active':''} onClick={()=>setCategory(c)}>{c}</button>)}</div>
         </div>
         <div className="panel pdv-products-panel">
-          <div className="pdv-section-head"><div><b>Produtos</b><small>{filtered.length} resultado(s)</small></div><span>Disponível = estoque físico - reservas</span></div>
-          <div className="pdv-product-list">{filtered.map(p=>{const available=availableFor(p),low=available<=Number(p.minStock||0);return <button className="pdv-product-row" key={p.id} onClick={()=>add(p)} disabled={!session||available<=0}><span className="pdv-product-code">{(p.name||'P').slice(0,2).toUpperCase()}</span><span className="pdv-product-main"><b>{p.name}</b><small>{p.sku} · {p.category||'Sem categoria'}</small></span><span className={`pdv-stock ${low?'low':''}`}><small>Disponível</small><b>{available} {p.unit||'UN'}</b></span><strong>{money(p.price)}</strong><Plus size={17}/></button>})}{!filtered.length&&<div className="cash-empty"><Search size={28}/><b>Nenhum produto encontrado</b><span>Revise a busca ou escolha outra categoria.</span></div>}</div>
+          <div className="pdv-section-head"><div><b>Produtos</b><small>{filtered.length} resultado(s)</small></div><span>Itens sem preço ou estoque conferido ficam bloqueados para venda</span></div>
+          <div className="pdv-product-list">{filtered.map(p=>{const available=availableFor(p),low=available<=Number(p.minStock||0);return <button className="pdv-product-row" key={p.id} onClick={()=>add(p)} disabled={!session||!canSell(p)}><span className="pdv-product-code">{(p.name||'P').slice(0,2).toUpperCase()}</span><span className="pdv-product-main"><b>{p.name}</b><small>{p.sku} · {[p.variant,p.color,p.category||'Sem categoria'].filter(Boolean).join(' · ')}</small></span><span className={`pdv-stock ${low?'low':''}`}><small>{p.inventoryPending?'Conferência':p.madeToOrder?'Encomenda':'Disponível'}</small><b>{p.inventoryPending?'Pendente':p.madeToOrder?'Sob pedido':`${available} ${p.unit||'UN'}`}</b></span><strong>{Number(p.price)>0?money(p.price):'Preço pendente'}</strong><Plus size={17}/></button>})}{!filtered.length&&<div className="cash-empty"><Search size={28}/><b>Nenhum produto encontrado</b><span>Revise a busca ou escolha outra categoria.</span></div>}</div>
         </div>
       </div>
 
@@ -470,7 +477,8 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
         </div>
 
         <div className="pdv-total-box"><div><span>Subtotal</span><b>{money(gross)}</b></div><div className="discount"><span>Desconto</span><b>- {money(discount)}</b></div><div className="grand"><span>TOTAL</span><b>{money(total)}</b></div></div>
-        <button className="pdv-pay-button" onClick={openCheckout} disabled={!session||!cart.length}><WalletCards size={20}/><span>IR PARA PAGAMENTO<small>F8</small></span><ChevronRight size={20}/></button>
+        <div className="pdv-quick-pay"><span>Receber com um clique</span><div><button onClick={()=>openCheckout('Pix')} disabled={!session||!cart.length}><ScanLine size={15}/>Pix</button><button onClick={()=>openCheckout('Dinheiro')} disabled={!session||!cart.length}><Banknote size={15}/>Dinheiro</button><button onClick={()=>openCheckout('Cartão de crédito')} disabled={!session||!cart.length}><CreditCard size={15}/>Crédito</button><button onClick={()=>openCheckout('Cartão de débito')} disabled={!session||!cart.length}><CreditCard size={15}/>Débito</button></div></div>
+        <button className="pdv-pay-button" onClick={()=>openCheckout()} disabled={!session||!cart.length}><WalletCards size={20}/><span>IR PARA PAGAMENTO<small>F8</small></span><ChevronRight size={20}/></button>
       </div>
     </div>}
 
@@ -522,7 +530,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
           <span>Subtotal <b>{money(gross)}</b></span><span>Desconto <b>- {money(discount)}</b></span><strong>TOTAL <em>{money(total)}</em></strong>
           <div className="pdv-summary-payments">{paymentRows.map((p,i)=>{const preview=paymentPreview(p);return <div key={`${p.type}-${i}`}><span>{p.type}{p.type==='Cartão de crédito'?` · ${preview.installments}x`:''}</span><b>{money(preview.amount)}</b>{p.type==='Cartão de crédito'&&<small>{preview.installments}x de {money(preview.installmentValue)} · líquido {money(preview.net)}</small>}</div>})}</div>
           <span className={Math.abs(paymentTotal-total)<.01?'ok-line':'warn-line'}>Pagamentos <b>{money(paymentTotal)}</b></span>{remaining>0&&<span className="warn-line">Falta pagar <b>{money(remaining)}</b></span>}{paymentTotal>total+.01&&<span className="warn-line">Excedente <b>{money(paymentTotal-total)}</b></span>}{cashPart>0&&<span>Troco <b>{money(change)}</b></span>}
-          <div className="pdv-checkout-protection"><ShieldCheck size={19}/><div><b>Operação protegida</b><small>Venda, estoque, financeiro, pedido e fiscal são gravados em conjunto.</small></div></div>
+          <div className="pdv-checkout-protection"><ShieldCheck size={19}/><div><b>Operação protegida</b><small>Os registros são gravados neste navegador. Confira o pagamento e o estoque antes de confirmar.</small></div></div>
           <div className="pdv-checkout-actions"><button className="secondary" onClick={()=>setCheckoutOpen(false)} disabled={finalizing}>Voltar para venda</button><button className="pdv-confirm-sale" onClick={finalize} disabled={finalizing||Math.abs(paymentTotal-total)>.01}>{finalizing?'PROCESSANDO...':'FINALIZAR VENDA'}</button></div>
         </div>
       </div>
