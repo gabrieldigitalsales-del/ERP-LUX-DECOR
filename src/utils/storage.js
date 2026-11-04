@@ -1,7 +1,14 @@
 import {compactProduct,hydrateProduct} from '../data/masterData';
 import {cloudConfigured} from './cloudAuth';
 import {erpCloudStorage,cloudReady,commitCloudDocuments,queueCloudWrite} from '../services/cloudStore';
-const businessStorage=()=>cloudConfigured()&&cloudReady()?erpCloudStorage:localStorage;
+const businessStorage=()=>cloudConfigured()?erpCloudStorage:localStorage;
+export const erpStorage={
+ getItem:key=>businessStorage().getItem(key),
+ setItem:(key,value)=>businessStorage().setItem(key,value),
+ removeItem:key=>businessStorage().removeItem(key),
+ key:index=>businessStorage().key(index),
+ get length(){return businessStorage().length}
+};
 import {mergeLuxInventory} from '../data/luxInventory';
 const masterSuppliers=[];
 const LEGACY_PREFIX='luxdecor-';
