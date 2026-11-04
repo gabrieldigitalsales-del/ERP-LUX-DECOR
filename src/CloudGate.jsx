@@ -5,10 +5,11 @@ import{cloudConfigured,restoreCloudSession,signOutCloud,getCloudSession}from'./u
 import{loadCloudDocuments,clearCloudDocuments,erpCloudStorage,importLegacyDocuments,availableLegacyKeys,commitCloudDocuments,cloudError,flushCloudWrites}from'./services/cloudStore';
 import{seedProducts,seedSuppliers}from'./data/seed';
 import{compactProduct}from'./data/masterData';
+import{listLegacyLocalAttachments,listAttachments,putAttachment}from'./utils/attachments';
 
 export default function CloudGate(){
  const[stage,setStage]=useState('checking'),[session,setSession]=useState(null),
- [error,setError]=useState(''),[legacyKeys,setLegacyKeys]=useState([]),[busy,setBusy]=useState(false);
+ [error,setError]=useState(''),[legacyKeys,setLegacyKeys]=useState([]),[legacyFiles,setLegacyFiles]=useState([]),[busy,setBusy]=useState(false);
  const init=async s=>{
   setSession(s);
   if(!s?.member){setStage('login');return}
@@ -19,7 +20,9 @@ export default function CloudGate(){
      !/password|senha|pin|auth|session|__|csc|cert|token|secret/i.test(k)
      &&!k.includes('app-schema-version'));
    setLegacyKeys(keys);
-   if(s.member.role==='Administrador'&&erpCloudStorage.getItem('luxdecor-products-v12')===null&&keys.length){
+   const oldFiles=s.member.role==='Administrador'?await listLegacyLocalAttachments():[];
+   setLegacyFiles(oldFiles);
+   if(s.member.role==='Administrador'&&((erpCloudStorage.getItem('luxdecor-products-v12')===null&&keys.length)||oldFiles.length)){
     setStage('migrate');return;
    }
    if(s.member.role==='Administrador'&&erpCloudStorage.getItem('luxdecor-products-v12')===null){
@@ -39,7 +42,11 @@ export default function CloudGate(){
  const finishMigration=async importOld=>{
   if(busy)return;setBusy(true);setError('');
   try{
-   if(importOld)await importLegacyDocuments(legacyKeys);
+   if(importOld){
+    await importLegacyDocuments(legacyKeys);
+    const exists=new Set((await listAttachments()).map(a=>a.id));
+    for(const row of legacyFiles){if(!exists.has(row.id)){await putAttachment(row);exists.add(row.id)}}
+   }
    await seedCatalog();
    await loadCloudDocuments();
    setStage('ready');
@@ -70,7 +77,7 @@ export default function CloudGate(){
   <div className="erp-cloud-gate-card">
    <h2>{stage==='migrate'?'Migrar cadastros para o Supabase':stage==='loading'?'Carregando dados da Lux Decor':stage==='unconfigured'?'Conexão Supabase ausente':'Conectando ao ERP LUX DECOR'}</h2>
    {stage==='migrate'?
-    <><p>Encontrei {legacyKeys.length} registros deste navegador. Eles ainda não estão no servidor. Faça uma cópia e importe para não perder os dados. O sistema não apagará os registros antigos automaticamente.</p>
+    <><p>Encontrei {legacyKeys.length} registros e {legacyFiles.length} anexos deste navegador. Eles ainda não estão no servidor. Faça uma cópia e importe para não perder os dados. O sistema não apagará os registros antigos automaticamente.</p>
     <button className="secondary" onClick={backupLegacy} disabled={busy}>Baixar cópia antes de migrar</button>
     <button className="primary" onClick={()=>finishMigration(true)} disabled={busy}>{busy?'Importando...':'Importar dados existentes para o Supabase'}</button>
     <button className="secondary" onClick={()=>finishMigration(false)} disabled={busy}>Começar somente com o catálogo padrão de 54 produtos</button></>:
