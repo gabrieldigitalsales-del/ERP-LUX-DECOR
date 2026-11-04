@@ -11,6 +11,7 @@ export const navItems=[
   ['sales','Histórico de vendas',ShoppingCart,'Operação'],
   ['orders','Pedidos',ClipboardCheck,'Operação'],
   ['products','Produtos',Package,'Cadastros'],
+  ['salespeople','Vendedoras',Users,'Cadastros'],
   ['stock','Estoque',Boxes,'Estoque'],
   ['movements','Movimentações',ArrowLeftRight,'Estoque'],
   ['clients','Clientes',Users,'Cadastros'],
