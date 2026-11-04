@@ -35,6 +35,8 @@ assert.throws(()=>commercial.saveSalespeople([{name:'Ana'},{name:'ana'}]),/repet
 store.clear();
 store.set('luxdecor-salespeople-v1',JSON.stringify(['Tatiane Franco','Vendedora Legada']));
 assert.deepEqual(commercial.getSalespeople().map(x=>x.name),['Vendedora Legada'],'Migração legada não restaura exemplos');
+store.set('luxdecor-salespeople-v2',JSON.stringify([{id:'seller-1',name:'Mariana Silva',active:true},{id:'seller-new',name:'Nova Vendedora',active:true}]));
+assert.deepEqual(commercial.getSalespeople().map(x=>x.name),['Nova Vendedora'],'Backup antigo não pode recriar demonstrações');
 
 const master=await import('data:text/javascript;base64,'+Buffer.from(read('src/data/masterData.js')).toString('base64'));
 const editedProduct={id:'p-1',nome_produto:'Sofá antigo',preco_final:100,fornecedor:'Antigo',name:'Sofá novo',price:250,supplier:'Novo',category:'Estofados',color:'Areia'};
