@@ -993,3 +993,15 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-user-edit .lux-user-active{display:flex;align-items:center;flex-direction:row;gap:7px}
 .lux-user-active input{width:auto;min-height:0}
 @media(max-width:720px){.lux-user-create{grid-template-columns:1fr}.lux-user-record{align-items:start;flex-direction:column}.lux-user-management-head{align-items:start}}
+
+
+/* Configurações: cards compactos sem esticar até a altura dos cards vizinhos */
+.settings-grid > .settings-compact-card{
+  align-self:start!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  padding:16px!important;
+}
+.settings-grid > .settings-compact-card .form-field{margin-top:10px}
+.settings-grid > .settings-compact-card p{margin:10px 0 0;line-height:1.45}
