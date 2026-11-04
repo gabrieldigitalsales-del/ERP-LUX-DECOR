@@ -14,7 +14,7 @@ globalThis.localStorage={
 };
 globalThis.window={dispatchEvent:()=>{}};
 globalThis.CustomEvent=class{constructor(name,options){this.type=name;this.detail=options?.detail}};
-const commercialSource=read('src/utils/commercial.js').replace("import{uid}from'./ids';","const uid=()=> 'seller-test-generated';");
+const commercialSource=read('src/utils/commercial.js').replace("import{erpStorage}from'./storage';","const erpStorage=localStorage;").replace("import{uid}from'./ids';","const uid=()=> 'seller-test-generated';");
 const commercial=await import('data:text/javascript;base64,'+Buffer.from(commercialSource).toString('base64'));
 assert.deepEqual(commercial.getSalespeople(),[],'Nenhuma vendedora fictícia deve ser criada');
 
