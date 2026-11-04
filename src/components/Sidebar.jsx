@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard,Package,Boxes,ArrowLeftRight,ShoppingCart,Store,Users,Truck,
-  ShoppingBasket,WalletCards,ChartSpline,Settings,ChevronRight,ShieldCheck,ClipboardCheck
+  WalletCards,ChartSpline,Settings,ChevronRight,ShieldCheck,ClipboardCheck
 } from 'lucide-react';
 import logo from '../assets/lux-logo.png';import{canViewPage}from'../utils/permissions';
 
@@ -11,9 +11,8 @@ export const navItems=[
   ['sales','Histórico de vendas',ShoppingCart,'Operação'],
   ['orders','Pedidos',ClipboardCheck,'Operação'],
   ['products','Produtos',Package,'Cadastros'],
-  ['stock','Estoque',Boxes,'Estoque & Compras'],
-  ['movements','Movimentações',ArrowLeftRight,'Estoque & Compras'],
-  ['purchases','Compras',ShoppingBasket,'Estoque & Compras'],
+  ['stock','Estoque',Boxes,'Estoque'],
+  ['movements','Movimentações',ArrowLeftRight,'Estoque'],
   ['clients','Clientes',Users,'Cadastros'],
   ['suppliers','Fornecedores',Truck,'Cadastros'],
   ['finance','Financeiro',WalletCards,'Gestão'],
