@@ -913,3 +913,9 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .pdv-quick-pay button:not(:disabled):hover{background:#e8f0fa;border-color:#a9bfd9}
 .pdv-quick-pay button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:650px){.pdv-simple-guide{gap:6px;padding:9px;font-size:11px}.pdv-simple-guide>svg{width:11px}.pdv-quick-pay>div{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Lux Decor • botões compactos para cadastro de vendedoras */
+.commercial-settings-card .lux-seller-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:10px 0 5px}
+.commercial-settings-card .lux-seller-actions button{width:auto!important;min-width:0!important;min-height:30px!important;padding:6px 11px!important;font-size:11px!important;font-weight:650!important;border-radius:6px!important;line-height:1.2!important}
+.commercial-settings-card .settings-mini-grid input::placeholder{color:#9ca9b9!important;opacity:1}
