@@ -1,4 +1,7 @@
 import {compactProduct,hydrateProduct} from '../data/masterData';
+import {cloudConfigured} from './cloudAuth';
+import {erpCloudStorage,cloudReady,commitCloudDocuments,queueCloudWrite} from '../services/cloudStore';
+const businessStorage=()=>cloudConfigured()&&cloudReady()?erpCloudStorage:localStorage;
 import {mergeLuxInventory} from '../data/luxInventory';
 const masterSuppliers=[];
 const LEGACY_PREFIX='luxdecor-';
@@ -9,7 +12,7 @@ const isHomeKey=k=>Boolean(k&&(k.startsWith(LEGACY_PREFIX)||k.startsWith(ERP_PRE
 
 export function safeRead(key,fallback){
   try{
-    const raw=localStorage.getItem(key);
+    const raw=businessStorage().getItem(key);
     if(raw===null)return fallback;
     return JSON.parse(raw);
   }catch(err){
@@ -25,7 +28,15 @@ export function safeReadArray(key,fallback=[]){
   return Array.isArray(fallback)?fallback.filter(Boolean):[];
 }
 export function safeWrite(key,value){
-  try{const payload=key==='luxdecor-products-v12'&&Array.isArray(value)?value.map(compactProduct):value;localStorage.setItem(key,JSON.stringify(payload));return true}catch(err){
+  try{
+    if(cloudConfigured()&&!cloudReady())throw Error('Banco remoto ainda não carregado.');
+    const payload=key==='luxdecor-products-v12'&&Array.isArray(value)?value.map(compactProduct):value;
+    const raw=JSON.stringify(payload);
+    if(cloudConfigured()){
+      if(erpCloudStorage.getItem(key)!==raw)void queueCloudWrite({[key]:raw});
+    }else localStorage.setItem(key,raw);
+    return true;
+  }catch(err){
     console.error('Falha ao salvar armazenamento local:',key,err);
     try{window.dispatchEvent(new CustomEvent('luxdecor-storage-error',{detail:{key,message:String(err?.message||err)}}))}catch{}
     return false;
@@ -37,6 +48,7 @@ export function homeStorageEntries(){
   return storage;
 }
 export function createLocalSnapshot(label='auto'){
+  if(cloudConfigured())return null; // On cloud, documents are versioned in Postgres.
   try{
     const key=`luxdecor__snapshot__${Date.now()}`;
     sessionStorage.setItem(key,JSON.stringify({label,at:new Date().toISOString(),storage:homeStorageEntries()}));
@@ -186,6 +198,7 @@ function migrateLuxInventory(){
   safeWrite('luxdecor-inventory-initialized-v1',{at:new Date().toISOString(),inserted:merged.inserted,archivedHome:archived.length,total:merged.products.length});
 }
 export function bootstrapStorage(){
+  if(cloudConfigured())return;
   try{
     for(const key of Object.keys(sessionStorage).filter(k=>k.startsWith('luxdecor__tx__'))){try{const tx=JSON.parse(sessionStorage.getItem(key)||'null');if(tx?.state==='preparing'&&tx.previous){for(const [k,raw] of Object.entries(tx.previous))raw===null?localStorage.removeItem(k):localStorage.setItem(k,raw)}sessionStorage.removeItem(key)}catch{}}
     const current=localStorage.getItem(VERSION_KEY);
@@ -200,7 +213,14 @@ export function storageHealth(){
 export const STORAGE_KEYS={
   products:'luxdecor-products-v12',clients:'luxdecor-clients-v12',suppliers:'luxdecor-suppliers-v12',finance:'luxdecor-finance-v12',sales:'luxdecor-sales-v12',purchases:'luxdecor-purchases-v12',movements:'luxdecor-stock-log-v16',invoices:'luxdecor-nf-docs-v16',cashLog:'luxdecor-cash-log-v23',cashSession:'luxdecor-cash-session-v23',held:'luxdecor-cash-held-v23',orders:'luxdecor-orders-v217'
 };
-export function commitLocalTransaction(label,changes={}){
+export async function commitLocalTransaction(label,changes={}){
+  if(cloudConfigured()){
+    try{
+      const transformed=Object.fromEntries(Object.entries(changes).map(([key,value])=>[key,JSON.stringify(key==='luxdecor-products-v12'&&Array.isArray(value)?value.map(compactProduct):value)]));
+      await commitCloudDocuments(transformed);
+      return{ok:true,txId:'cloud-'+Date.now()};
+    }catch(error){return{ok:false,error}};
+  }
   const txId=`tx_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,previous={};
   try{
     for(const key of Object.keys(changes))previous[key]=localStorage.getItem(key);
