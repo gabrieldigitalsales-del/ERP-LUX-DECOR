@@ -1,4 +1,5 @@
 import{erpStorage}from'./storage';
+import{cloudConfigured,getCloudSession}from'./cloudAuth';
 import{uid}from'./ids';
 const KEY='luxdecor-salespeople-v2';
 const LEGACY='luxdecor-salespeople-v1';
@@ -30,11 +31,11 @@ export function getSalespeople(){
   const seededDemo=x=>DEMO_NAMES.has(normalizedName(x.name))&&['seller-1','seller-2'].includes(String(x.id));
   const foundSeeded=rows.some(seededDemo);
   rows=rows.filter(x=>!seededDemo(x));
-  if(erpStorage.getItem(DEMO_CLEANED_KEY)!=='1'||foundSeeded){
+  if((!cloudConfigured()||getCloudSession()?.member?.role==='Administrador')&&(erpStorage.getItem(DEMO_CLEANED_KEY)!=='1'||foundSeeded)){
     erpStorage.setItem(KEY,JSON.stringify(rows));
     erpStorage.setItem(LEGACY,JSON.stringify(rows.filter(x=>x.active!==false).map(x=>x.name)));
     erpStorage.setItem(DEMO_CLEANED_KEY,'1');
-  }else if(!Array.isArray(current)){
+  }else if(!Array.isArray(current)&&(!cloudConfigured()||getCloudSession()?.member?.role==='Administrador')){
     erpStorage.setItem(KEY,JSON.stringify(rows));
   }
   return rows;
