@@ -36,7 +36,7 @@ export default function CloudLogin({onAuthenticated}){
     <label><span>Código de ativação individual</span><div className="login-input"><ShieldCheck size={17}/><input autoFocus value={code} onChange={e=>setCode(e.target.value.trim())} placeholder="Cole o código recebido" autoComplete="off" required/></div></label>
    </>:<>
     <label><span>E-mail</span><div className="login-input"><UserRound size={17}/><input autoFocus type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="seuemail@empresa.com" required/></div></label>
-    <label><span>Senha</span><div className="login-input"><LockKeyhole size={17}/><input type={show?'text':'password'} autoComplete={mode==='register'?'new-password':'current-password'} minLength={mode==='register'?10:undefined} value={password} onChange={e=>setPassword(e.target.value)} placeholder={mode==='register'?'Mínimo de 10 caracteres':'Sua senha'} required/><button type="button" onClick={()=>setShow(x=>!x)} aria-label="Mostrar senha">{show?<EyeOff size={16}/>:<Eye size={16}/>}</button></div></label>
+    <label><span>Senha</span><div className="login-input"><LockKeyhole size={17}/><input type={show?'text':'password'} autoComplete={mode==='register'?'new-password':'current-password'} minLength={mode==='register'?6:undefined} value={password} onChange={e=>setPassword(e.target.value)} placeholder={mode==='register'?'Mínimo de 6 caracteres':'Sua senha'} required/><button type="button" onClick={()=>setShow(x=>!x)} aria-label="Mostrar senha">{show?<EyeOff size={16}/>:<Eye size={16}/>}</button></div></label>
    </>}
    {info&&<div className="erp-cloud-info" role="status">{info}</div>}
    {error&&<div className="login-error" role="alert">{error}</div>}
