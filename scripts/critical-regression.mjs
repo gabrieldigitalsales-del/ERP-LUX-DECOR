@@ -69,5 +69,9 @@ assert.ok(stockCode.includes('changeArchived')&&stockCode.includes('restoreProdu
 const movementCode=read('src/pages/Movements.jsx');
 assert.ok(movementCode.includes("type=\"date\"")&&movementCode.includes('detailType'),'Movimentações precisam ter filtros e detalhes');
 assert.ok(read('src/components/Sidebar.jsx').includes("['movements','Movimentações'"),'Movimentações devem aparecer no menu');
+assert.ok(stockCode.includes('const deleteProduct=async()=>'),'Exclusão real deve estar implementada no Estoque');
+assert.ok(stockCode.includes('deleteProtection(p)')&&stockCode.includes('STORAGE_KEYS.sales')&&stockCode.includes('STORAGE_KEYS.movements'),'Exclusão exige checagem do histórico');
+assert.ok(stockCode.includes("deleteConfirmation.trim()!==String(p.sku||p.name).trim()"),'Exclusão exige confirmação por código');
+assert.ok(stockCode.includes('luxdecor-deleted-seed-ids-v1'),'Produtos excluídos não devem reaparecer ao importar');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
