@@ -27,7 +27,8 @@ const paymentIcon={
 const getCommissionRate=()=>Number(erpStorage.getItem('luxdecor-commission-rate')||2);
 const useLocal=(key,seed)=>{
   const[state,setState]=useState(()=>safeRead(key,seed));
-  useEffect(()=>{safeWrite(key,state)},[key,state]);
+  const first=useRef(true);
+  useEffect(()=>{if(first.current){first.current=false;return}safeWrite(key,state)},[key,state]);
   return[state,setState];
 };
 const newId=()=>uid('cash');
