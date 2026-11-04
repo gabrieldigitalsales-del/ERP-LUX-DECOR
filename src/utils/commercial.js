@@ -14,7 +14,7 @@ export function getSalespeople(){
 }
 export function saveSalespeople(rows=[]){
  if(!Array.isArray(rows))throw new Error('Lista de vendedoras inválida.');
- const normalized=rows.map((x,i)=>({...x,id:x.id||uid('seller'),name:String(x.name||'').trim(),active:x.active!==false,pin:String(x.pin||'').replace(/\\D/g,'').slice(0,6),commission:x.commission===''||x.commission==null?null:Number(x.commission),target:Number(x.target)||0,discountLimit:x.discountLimit===''||x.discountLimit==null?null:Number(x.discountLimit)}));
+ const normalized=rows.map((x,i)=>({...x,id:x.id||uid('seller'),name:String(x.name||'').trim(),active:x.active!==false,pin:String(x.pin||'').replace(/\D/g,'').slice(0,6),commission:x.commission===''||x.commission==null?null:Number(x.commission),target:Number(x.target)||0,discountLimit:x.discountLimit===''||x.discountLimit==null?null:Number(x.discountLimit)}));
  if(normalized.some(x=>!x.name))throw new Error('Preencha o nome de todas as vendedoras antes de salvar.');
  const names=normalized.map(x=>x.name.toLocaleLowerCase('pt-BR'));
  if(new Set(names).size!==names.length)throw new Error('Existem vendedoras com nomes repetidos.');
