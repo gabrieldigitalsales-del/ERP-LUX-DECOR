@@ -964,3 +964,32 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-movement-hint{font-size:11px;color:#64758a;margin-top:15px;line-height:1.5}
 @media(max-width:1050px){.lux-movement-columns{min-width:930px}.lux-movements-page .list-panel{overflow-x:auto}}
 @media(max-width:650px){.lux-movement-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.lux-movement-toolbar .search{min-width:100%;flex-basis:100%}.lux-movement-toolbar select{min-width:46%}}
+
+
+/* Lux Decor • administração de usuários */
+.lux-user-management{display:flex;flex-direction:column;gap:16px}
+.lux-user-management-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lux-user-management-head>div{display:grid;grid-template-columns:23px 1fr;column-gap:8px;align-items:center}
+.lux-user-management-head h3{margin:0}
+.lux-user-management-head p{grid-column:2;line-height:1.5;margin:5px 0 0}
+.lux-user-create{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;border:1px solid #e4eaf3;border-radius:8px;padding:15px;background:#fbfcfe}
+.lux-user-create>label,.lux-user-edit>label{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;color:#4c6178}
+.lux-user-create input,.lux-user-create select,.lux-user-edit input,.lux-user-edit select{min-height:37px;padding:7px 10px;width:100%;border:1px solid #d8e0e9;border-radius:6px;color:#19385e;background:#fff;font-size:12px}
+.lux-user-password{display:flex;align-items:center;position:relative}.lux-user-password input{padding-right:32px}
+.lux-user-password button{position:absolute;right:7px;border:none;background:transparent;cursor:pointer;padding:4px;display:flex;color:#597189}
+.lux-user-permissions{grid-column:1/-1;border-top:1px solid #e4e9f0;padding-top:12px;display:flex;flex-direction:column;gap:9px}
+.lux-user-permissions strong{font-size:11px;color:#203a5b}
+.lux-user-permissions>div{display:flex;flex-wrap:wrap;gap:6px 16px}
+.lux-user-permissions label{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#485f78;font-weight:500}
+.lux-user-permissions input{min-height:0;width:auto}
+.lux-user-create>button{justify-self:start;align-self:end}
+.lux-user-list{display:flex;flex-direction:column;gap:9px}.lux-user-list h4,.lux-user-edit h4{font-size:13px;color:#203c5e;margin:6px 0}
+.lux-user-record{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border:1px solid #e6ebf1;background:white;border-radius:7px}
+.lux-user-record>div:first-child{display:flex;flex-direction:column;gap:4px}
+.lux-user-record b{font-size:12px;color:#243e60}.lux-user-record small{font-size:10px;color:#7a8da1}
+.lux-user-record-actions{display:flex;gap:8px;flex-wrap:wrap}
+.lux-user-record-actions button{padding:7px 10px!important;min-height:30px!important;font-size:11px!important}
+.lux-user-edit{border:1px solid #dbe6f3;border-radius:8px;background:#f7fafe;padding:15px;display:flex;flex-direction:column;gap:12px}
+.lux-user-edit .lux-user-active{display:flex;align-items:center;flex-direction:row;gap:7px}
+.lux-user-active input{width:auto;min-height:0}
+@media(max-width:720px){.lux-user-create{grid-template-columns:1fr}.lux-user-record{align-items:start;flex-direction:column}.lux-user-management-head{align-items:start}}
