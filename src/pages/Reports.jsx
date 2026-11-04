@@ -1,3 +1,4 @@
+import{erpStorage}from'../utils/storage';
 import React,{useMemo,useState}from'react';
 import{BarChart3,Boxes,Users,ShoppingCart,TrendingUp,WalletCards,Download,FileSpreadsheet,Target,UserRound,Truck,CalendarCheck,PackageSearch,Medal,ChartNoAxesCombined}from'lucide-react';
 import{ResponsiveContainer,BarChart,Bar,XAxis,YAxis,Tooltip,CartesianGrid,PieChart,Pie,Cell}from'recharts';
@@ -5,7 +6,7 @@ import PageHeader from'../components/PageHeader';import{money,buildDRE,getProduc
 const POS='#16a34a',NEG='#dc2626';const stockPalette=['#14532d','#166534','#15803d','#16a34a','#22c55e','#86efac'];
 const csv=(name,rows)=>{const keys=Object.keys(rows[0]||{});const esc=v=>`"${String(v??'').replace(/"/g,'""')}"`;const txt=[keys.map(esc).join(';'),...rows.map(r=>keys.map(k=>esc(r[k])).join(';'))].join('\n');const blob=new Blob(['\ufeff'+txt],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)};
 export default function Reports({setPage,data}){
- const{products=[],sales=[],finance=[],clients=[],suppliers=[],purchases=[]}=data||{};const[tab,setTab]=useState('overview');const dre=buildDRE({sales,finance});const salesTarget=Number(localStorage.getItem('luxdecor-sales-target-monthly')||0);const validSales=sales.filter(s=>!['Cancelada','Cancelado'].includes(s.status));const openTitles=finance.filter(x=>!['paid','cancelled'].includes(x.status));
+ const{products=[],sales=[],finance=[],clients=[],suppliers=[],purchases=[]}=data||{};const[tab,setTab]=useState('overview');const dre=buildDRE({sales,finance});const salesTarget=Number(erpStorage.getItem('luxdecor-sales-target-monthly')||0);const validSales=sales.filter(s=>!['Cancelada','Cancelado'].includes(s.status));const openTitles=finance.filter(x=>!['paid','cancelled'].includes(x.status));
  const categories=useMemo(()=>{const m={};products.forEach(p=>m[p.category]=(m[p.category]||0)+(Number(p.stock)||0));return Object.entries(m).map(([name,value])=>({name,value}))},[products]);
  const margins=products.map(p=>({name:p.name.slice(0,22),margin:Number(getProductMargin(p).toFixed(1))})).sort((a,b)=>b.margin-a.margin).slice(0,8);
  const sellerCfg=useMemo(()=>getSalespeople(),[]);
