@@ -1,3 +1,4 @@
+import{erpStorage}from'../utils/storage';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Plus,
@@ -200,7 +201,7 @@ export default function Products({ products, setProducts, setPage, sales = [] })
     const old = products.find((x) => x.id === edit.id);
     setProducts((p) => p.map((x) => (x.id === edit.id ? { ...x, ...edit, updatedAt: new Date().toISOString() } : x)));
     let hist={};
-    try{const raw=JSON.parse(localStorage.getItem('luxdecor-product-history')||'{}');hist=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{}}catch{hist={}}
+    try{const raw=JSON.parse(erpStorage.getItem('luxdecor-product-history')||'{}');hist=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{}}catch{hist={}}
     hist[edit.id] = [
       {
         at: new Date().toISOString(),
@@ -211,7 +212,7 @@ export default function Products({ products, setProducts, setPage, sales = [] })
       },
       ...(hist[edit.id] || []),
     ].slice(0, 50);
-    localStorage.setItem('luxdecor-product-history', JSON.stringify(hist));
+    erpStorage.setItem('luxdecor-product-history', JSON.stringify(hist));
     addAudit('Produto editado', 'Produtos', `${edit.name} · custo ${money(edit.cost)} · preço ${money(edit.price)}`);
     setDetail({ ...edit });
     setEdit(null);
@@ -223,7 +224,7 @@ export default function Products({ products, setProducts, setPage, sales = [] })
   };
 
   let history=[];
-  if(detail){try{const raw=JSON.parse(localStorage.getItem('luxdecor-product-history')||'{}');history=Array.isArray(raw?.[detail.id])?raw[detail.id]:[]}catch{history=[]}}
+  if(detail){try{const raw=JSON.parse(erpStorage.getItem('luxdecor-product-history')||'{}');history=Array.isArray(raw?.[detail.id])?raw[detail.id]:[]}catch{history=[]}}
 
   return (
     <section className="page">
