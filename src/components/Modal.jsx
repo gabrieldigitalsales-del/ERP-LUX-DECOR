@@ -1,6 +1,7 @@
 import React,{useEffect,useRef}from'react';
 import{createPortal}from'react-dom';
 import{X}from'lucide-react';
+import luxLogo from'../assets/lux-logo.png';
 
 export default function Modal({title,subtitle,children,onClose,wide=false,size,preventBackdropClose=false,footer}){
   const dialogRef=useRef(null);
@@ -63,7 +64,7 @@ export default function Modal({title,subtitle,children,onClose,wide=false,size,p
   const node=<div className="modal-backdrop modal-centered-backdrop" onMouseDown={closeBackdrop}>
     <div ref={dialogRef} className={`modal modal-centered ${wide?'wide':''} ${size?`modal-${size}`:''}`} onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="erp-modal-title">
       <div className="modal-head">
-        <div><h3 id="erp-modal-title">{title}</h3>{subtitle&&<p>{subtitle}</p>}</div>
+        <div className="lux-modal-heading"><img className="lux-modal-brand" src={luxLogo} alt="" aria-hidden="true"/><div><h3 id="erp-modal-title">{title}</h3>{subtitle&&<p>{subtitle}</p>}</div></div>
         {onClose&&<button className="modal-close" type="button" onClick={()=>onCloseRef.current?.()} aria-label="Fechar"><X size={19}/></button>}
       </div>
       <div className="modal-body">{children}</div>
