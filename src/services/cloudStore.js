@@ -43,7 +43,7 @@ export function queueCloudWrite(changes={}){
  queue.catch(err=>{console.error('Falha ao persistir no Supabase:',err)});
  return queue;
 }
-export async function flushCloudWrites(){await queue}
+export async function flushCloudWrites(){await queue;if(lastError)throw lastError}
 export function clearCloudDocuments(){records.clear();versions.clear();loaded=false;lastError=null;queue=Promise.resolve();show('disconnected')}
 export async function importLegacyDocuments(keys=[]){
  if(getCloudSession()?.member?.role!=='Administrador')throw Error('Apenas o administrador pode importar cadastros.');
