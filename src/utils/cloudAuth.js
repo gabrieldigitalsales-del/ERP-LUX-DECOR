@@ -42,7 +42,7 @@ export async function signInCloud(email,password){
  return keep({...auth,expires_at:Date.now()+auth.expires_in*1000,member});
 }
 export async function signUpCloud(email,password){
- if(password.length<10)throw Error('Use uma senha com pelo menos 10 caracteres.');
+ if(password.length<6)throw Error('Use uma senha com pelo menos 6 caracteres.');
  return api('/auth/v1/signup',{method:'POST',token:KEY,body:{email:email.trim().toLowerCase(),password}});
 }
 export async function activateCloudAccount(username,code){
@@ -54,7 +54,7 @@ export async function activateCloudAccount(username,code){
 }
 export async function changeCloudPassword(oldPassword,newPassword){
  const s=getCloudSession();if(!s?.access_token)throw Error('Sua sessão expirou.');
- if(newPassword.length<10)throw Error('A senha deve ter pelo menos 10 caracteres.');
+ if(newPassword.length<6)throw Error('A senha deve ter pelo menos 6 caracteres.');
  // Reauthenticate so a session stolen from a browser cannot silently change password.
  await api('/auth/v1/token?grant_type=password',{method:'POST',token:KEY,body:{email:s.user.email,password:oldPassword}});
  await api('/auth/v1/user',{method:'PUT',token:s.access_token,body:{password:newPassword}});
