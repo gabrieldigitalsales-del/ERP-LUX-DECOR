@@ -26,19 +26,20 @@ export async function loadCloudDocuments(){
 }
 export async function commitCloudDocuments(changes={}){
  if(!loaded)throw Error('O banco ainda não foi carregado.');
+ if(lastError)throw lastError;
  const s=await ensureFreshCloudSession();
  const expected=Object.fromEntries(Object.keys(changes).map(k=>[k,versions.get(k)||0]));
  syncing++;show('saving');
  try{
   const updated=await api('/rest/v1/rpc/erpluxdecor_save_documents',{method:'POST',body:{p_changes:changes,p_expected:expected},token:s.access_token});
   for(const [k,v] of Object.entries(changes)){if(v===null)records.delete(k);else records.set(k,String(v));versions.set(k,updated[k]||((versions.get(k)||0)+1))}
-  lastError=null;return updated;
+  return updated;
  }catch(error){
   lastError=error;show('error',error.message);throw error;
  }finally{syncing--;if(syncing===0&&!lastError)show('saved')}
 }
 export function queueCloudWrite(changes={}){
- queue=queue.catch(()=>{}).then(()=>commitCloudDocuments(changes));
+ queue=queue.then(()=>commitCloudDocuments(changes));
  // A remote rejection is visible, never presented as confirmed.
  queue.catch(err=>{console.error('Falha ao persistir no Supabase:',err)});
  return queue;
