@@ -1,5 +1,5 @@
 import{erpStorage}from'../utils/storage';
-import React,{useEffect,useMemo,useState}from'react';
+import React,{useEffect,useMemo,useState,useRef}from'react';
 import{Plus,ArrowDownLeft,ArrowUpRight,CheckCircle2,Upload,Download,LockKeyhole,Unlock,Trash2,Landmark,WalletCards,TrendingUp,ShieldAlert,Search,Pencil,Copy,History}from'lucide-react';
 import PageHeader from'../components/PageHeader';
 import Modal from'../components/Modal';
@@ -96,11 +96,11 @@ export default function Finance({finance=[],setFinance,sales=[],products=[],invo
  const[settleValue,setSettleValue]=useState('');
  const[financeAuditOpen,setFinanceAuditOpen]=useState(false);
 
- useEffect(()=>{safeWrite('luxdecorerp-fin-natures-v211',list(natures))},[natures]);
- useEffect(()=>{safeWrite('luxdecorerp-fin-budget-v211',list(budgets))},[budgets]);
- useEffect(()=>{safeWrite('luxdecorerp-bills-v211',list(bills))},[bills]);
- useEffect(()=>{safeWrite('luxdecorerp-bank-rows-v211',list(bankRows))},[bankRows]);
- useEffect(()=>{safeWrite('luxdecorerp-fin-closing-v211',list(closings))},[closings]);
+ const initial_natures=useRef(true);useEffect(()=>{if(initial_natures.current){initial_natures.current=false;return}safeWrite('luxdecorerp-fin-natures-v211',list(natures))},[natures]);
+ const initial_budgets=useRef(true);useEffect(()=>{if(initial_budgets.current){initial_budgets.current=false;return}safeWrite('luxdecorerp-fin-budget-v211',list(budgets))},[budgets]);
+ const initial_bills=useRef(true);useEffect(()=>{if(initial_bills.current){initial_bills.current=false;return}safeWrite('luxdecorerp-bills-v211',list(bills))},[bills]);
+ const initial_bankRows=useRef(true);useEffect(()=>{if(initial_bankRows.current){initial_bankRows.current=false;return}safeWrite('luxdecorerp-bank-rows-v211',list(bankRows))},[bankRows]);
+ const initial_closings=useRef(true);useEffect(()=>{if(initial_closings.current){initial_closings.current=false;return}safeWrite('luxdecorerp-fin-closing-v211',list(closings))},[closings]);
  useEffect(()=>{const onKey=e=>{if(tab!=='entries'||e.ctrlKey||e.metaKey||e.altKey)return;const tag=(e.target?.tagName||'').toLowerCase();if(['input','textarea','select'].includes(tag))return;if(e.key.toLowerCase()==='n'){e.preventDefault();openNewEntry()}if(e.key.toLowerCase()==='f'){e.preventDefault();document.getElementById('finance-entry-search')?.focus()}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[tab]);
  useEffect(()=>{setEntryPage(1)},[entryQuery,entryStatus,entryType,entryOrigin,period,entryPageSize]);
 
