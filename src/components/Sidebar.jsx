@@ -12,6 +12,7 @@ export const navItems=[
   ['orders','Pedidos',ClipboardCheck,'Operação'],
   ['products','Produtos',Package,'Cadastros'],
   ['stock','Estoque',Boxes,'Estoque & Compras'],
+  ['movements','Movimentações',ArrowLeftRight,'Estoque & Compras'],
   ['purchases','Compras',ShoppingBasket,'Estoque & Compras'],
   ['clients','Clientes',Users,'Cadastros'],
   ['suppliers','Fornecedores',Truck,'Cadastros'],
