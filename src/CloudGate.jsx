@@ -2,7 +2,7 @@ import React,{useEffect,useState}from'react';
 import App from'./App';
 import CloudLogin from'./components/CloudLogin';
 import{cloudConfigured,restoreCloudSession,signOutCloud,getCloudSession}from'./utils/cloudAuth';
-import{loadCloudDocuments,clearCloudDocuments,erpCloudStorage,importLegacyDocuments,availableLegacyKeys,commitCloudDocuments,cloudError}from'./services/cloudStore';
+import{loadCloudDocuments,clearCloudDocuments,erpCloudStorage,importLegacyDocuments,availableLegacyKeys,commitCloudDocuments,cloudError,flushCloudWrites}from'./services/cloudStore';
 import{seedProducts,seedSuppliers}from'./data/seed';
 import{compactProduct}from'./data/masterData';
 
@@ -51,6 +51,18 @@ export default function CloudGate(){
   const a=document.createElement('a'),blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),data:copy},null,2)],{type:'application/json'});
   a.href=URL.createObjectURL(blob);a.download='luxdecor-backup-antes-do-supabase.json';a.click();URL.revokeObjectURL(a.href);
  };
+ useEffect(()=>{
+  if(stage!=='ready')return;
+  let busy=false;
+  const refresh=async()=>{
+   if(busy||document.hidden)return;busy=true;
+   try{await flushCloudWrites();await loadCloudDocuments()}catch(error){console.warn('Atualização Supabase:',error.message)}
+   finally{busy=false}
+  };
+  const timer=setInterval(refresh,30000);
+  window.addEventListener('focus',refresh);
+  return()=>{clearInterval(timer);window.removeEventListener('focus',refresh)}
+ },[stage]);
  const logout=async()=>{await signOutCloud();clearCloudDocuments();setSession(null);setStage('login')};
  if(stage==='ready'&&session?.member)return <App cloudSession={session} onCloudLogout={logout}/>;
  if(stage==='login')return <CloudLogin onAuthenticated={init}/>;
