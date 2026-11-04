@@ -3,7 +3,7 @@ import{UserPlus,Users,ShieldCheck,KeyRound,Save,RefreshCw,Eye,EyeOff}from'lucide
 import{api,getCloudSession}from'../utils/cloudAuth';
 import{toast}from'./ToastHost';
 const rolePages={
- Administrador:[['dashboard','Dashboard'],['cashier','Caixa / PDV'],['sales','Vendas'],['orders','Pedidos'],['products','Produtos'],['stock','Estoque'],['movements','Movimentações'],['clients','Clientes'],['suppliers','Fornecedores'],['finance','Financeiro'],['operations','Pós-venda'],['reports','Relatórios'],['settings','Configurações'],['intelligence','Inteligência']],
+ Administrador:[['dashboard','Dashboard'],['cashier','Caixa / PDV'],['sales','Vendas'],['orders','Pedidos'],['products','Produtos'],['salespeople','Vendedoras'],['stock','Estoque'],['movements','Movimentações'],['clients','Clientes'],['suppliers','Fornecedores'],['finance','Financeiro'],['operations','Pós-venda'],['reports','Relatórios'],['settings','Configurações'],['intelligence','Inteligência']],
  Vendedor:[['dashboard','Dashboard'],['cashier','Caixa / PDV'],['sales','Vendas'],['orders','Pedidos'],['products','Produtos'],['clients','Clientes'],['operations','Pós-venda']],
  Financeiro:[['dashboard','Dashboard'],['finance','Financeiro'],['reports','Relatórios'],['clients','Clientes'],['suppliers','Fornecedores']]
 };
