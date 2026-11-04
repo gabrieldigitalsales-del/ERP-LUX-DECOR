@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /
+
+# Sistema interno da Lux Decor.
+# Indexação pública desativada por padrão.

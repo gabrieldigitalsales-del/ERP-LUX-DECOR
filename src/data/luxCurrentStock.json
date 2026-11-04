@@ -1,0 +1,488 @@
+[
+  {
+    "factory": "LUART",
+    "model": "Nevada",
+    "module": "80",
+    "color": "AB 202",
+    "quantity": null,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Nevada",
+    "module": "100",
+    "color": "AB 201",
+    "quantity": null,
+    "notes": "Couro preto",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Nevada",
+    "module": "120",
+    "color": "LM 537",
+    "quantity": null,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "70",
+    "color": "AB 103",
+    "quantity": null,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "90",
+    "color": "A 102",
+    "quantity": 3,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "90",
+    "color": "A 103",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "90",
+    "color": "AB 221",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "90",
+    "color": "AB 222",
+    "quantity": 2,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "100",
+    "color": "A 102",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "100",
+    "color": "AB 204",
+    "quantity": 2,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "100",
+    "color": "AB 222",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "120",
+    "color": "AB 201",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Camaro",
+    "module": "120",
+    "color": "AB 204",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Noronha",
+    "module": "100",
+    "color": "A 103",
+    "quantity": 4,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Noronha",
+    "module": "100",
+    "color": "LN 537",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Noronha",
+    "module": "120",
+    "color": "AB 201",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Noronha",
+    "module": "120",
+    "color": "AB 221",
+    "quantity": 2,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Noronha",
+    "module": "120",
+    "color": "AB 224",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Noronha",
+    "module": "120",
+    "color": "LN 537",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Stambu",
+    "module": "100",
+    "color": "AB 202",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Stambu",
+    "module": "100",
+    "color": "AB 222",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Stambu",
+    "module": "120",
+    "color": "AB 202",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Stambu",
+    "module": "120",
+    "color": "AB 222",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "LUART",
+    "model": "Wagyu",
+    "module": "110",
+    "color": "Couro nozes",
+    "quantity": null,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Orion",
+    "module": "100",
+    "color": "Cor 27",
+    "quantity": 2,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Orion",
+    "module": "100",
+    "color": "Marrom 25",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Orion",
+    "module": "120",
+    "color": "Cor 27",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Doha",
+    "module": "100",
+    "color": "C234",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Doha",
+    "module": "100",
+    "color": "C235",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Malibu (canto)",
+    "module": "Não informado",
+    "color": "Cinza 06",
+    "quantity": null,
+    "notes": "Módulo não informado",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Porto",
+    "module": "180",
+    "color": "AB 200",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Porto",
+    "module": "180",
+    "color": "AB 205",
+    "quantity": 3,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Creta",
+    "module": "160",
+    "color": "Bege 24",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Creta",
+    "module": "160",
+    "color": "Marrom 25",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Creta",
+    "module": "200",
+    "color": "Bege 24",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "BOARETO",
+    "model": "Creta",
+    "module": "200",
+    "color": "Marrom 25",
+    "quantity": 1,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "MAIS ESTOFADOS",
+    "model": "Ravena",
+    "module": "2,00 m",
+    "color": "Código 202",
+    "quantity": null,
+    "notes": "",
+    "showroom": false
+  },
+  {
+    "factory": "EDN",
+    "model": "Buffet Andorra",
+    "module": "4 pés",
+    "color": "Cedro",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Rack Cayman",
+    "module": "1,35 m",
+    "color": "Cedro",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Painel Ripado",
+    "module": "1,35 m",
+    "color": "Cedro",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Nicho Aspen",
+    "module": "1,60 m",
+    "color": "Cedro",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Buffet Liv",
+    "module": "4 pés",
+    "color": "Cedro/Off-white",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Rack Legacy",
+    "module": "2,00 m",
+    "color": "Cedro/Off-white",
+    "quantity": null,
+    "notes": "Listagem repetida; quantidade a conferir",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Mesa de centro Holambra",
+    "module": "Não informado",
+    "color": "Cedro/Off-white",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Painel Maxi",
+    "module": "1,80 m",
+    "color": "Cedro/Off-white",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Mesa Elevare Lucca",
+    "module": "Não informado",
+    "color": "Off-white/Cedro",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Painel Lux New",
+    "module": "1,20 m",
+    "color": "Cedro/Off-white",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Buffet Serviço",
+    "module": "1,72 m",
+    "color": "Cedro/Off-white",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Rack Lúrium",
+    "module": "1,60 m",
+    "color": "Cedro",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Buffet Andorra",
+    "module": "3 pés",
+    "color": "Cedro",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Rack Legacy",
+    "module": "1,60 m",
+    "color": "Off-white/Cedro",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Painel Avant",
+    "module": "1,80 m",
+    "color": "Cedro",
+    "quantity": null,
+    "notes": "Listagem repetida; conferir se foi vendido",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Rack (modelo não informado)",
+    "module": "1,60 m",
+    "color": "Cedro/Off-white",
+    "quantity": null,
+    "notes": "Modelo não informado",
+    "showroom": true
+  },
+  {
+    "factory": "EDN",
+    "model": "Rack Vegas",
+    "module": "1,80 m",
+    "color": "Cedro",
+    "quantity": null,
+    "notes": "",
+    "showroom": true
+  }
+]
