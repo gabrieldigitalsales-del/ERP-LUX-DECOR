@@ -29,7 +29,7 @@ export function can(action,role=currentRole()){
 }
 export function requirePermission(action){return{ok:can(action),role:currentRole(),action}}
 export const PAGE_ACCESS={
-  Administrador:['dashboard','products','stock','movements','sales','orders','cashier','clients','suppliers','purchases','finance','operations','reports','settings','intelligence'],
+  Administrador:['dashboard','products','stock','movements','sales','orders','cashier','clients','suppliers','finance','operations','reports','settings','intelligence'],
   Gerente:['dashboard','products','stock','movements','sales','orders','cashier','clients','suppliers','purchases','finance','operations','reports','settings','intelligence'],
   Vendedor:['dashboard','products','sales','orders','cashier','clients','operations'],
   Estoque:['dashboard','products','stock','movements','orders','purchases','suppliers'],
