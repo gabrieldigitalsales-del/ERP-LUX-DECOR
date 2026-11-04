@@ -919,3 +919,21 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .commercial-settings-card .lux-seller-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:10px 0 5px}
 .commercial-settings-card .lux-seller-actions button{width:auto!important;min-width:0!important;min-height:30px!important;padding:6px 11px!important;font-size:11px!important;font-weight:650!important;border-radius:6px!important;line-height:1.2!important}
 .commercial-settings-card .settings-mini-grid input::placeholder{color:#9ca9b9!important;opacity:1}
+
+
+/* ERP Lux Decor – autenticação e sincronização com Supabase */
+.erp-cloud-gate{min-height:100dvh;display:grid;place-items:center;background:#f3f6fa;padding:24px;font-family:inherit}
+.erp-cloud-gate-card{width:min(520px,100%);padding:34px;border:1px solid #dde5ef;border-radius:12px;background:#fff;box-shadow:0 18px 55px rgba(20,46,80,.08);display:flex;flex-direction:column;gap:13px}
+.erp-cloud-gate-card h2{margin:0;color:#173757;font-size:22px}
+.erp-cloud-gate-card p{color:#596f85;line-height:1.55;font-size:13px}
+.erp-cloud-gate-card button{min-height:42px;border-radius:7px;font-weight:650}
+.erp-cloud-login-actions{margin:14px 0 0;display:flex;justify-content:center}
+.erp-cloud-login-actions button{border:none;background:transparent;color:#1c467b;font-size:12px;font-weight:650;cursor:pointer;padding:8px}
+.erp-cloud-login-actions button:hover{text-decoration:underline}
+.erp-cloud-info{padding:11px;background:#eef6ff;border:1px solid #bcd7ef;border-radius:7px;font-size:12px;color:#204b76;line-height:1.5}
+.erp-cloud-status{position:fixed;left:24px;bottom:18px;z-index:99999;display:flex;align-items:center;gap:8px;border-radius:8px;border:1px solid #cedbe9;background:#fff;padding:10px 14px;box-shadow:0 6px 30px rgba(8,33,65,.16);font-size:12px;font-weight:600;color:#244369;max-width:min(550px,calc(100vw - 30px))}
+.erp-cloud-status-error{background:#fff4f3;border-color:#e8b4b1;color:#872b28}
+.erp-cloud-status button{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid currentColor;border-radius:5px;padding:5px 8px;cursor:pointer;color:inherit}
+.login-copy small{display:flex;align-items:center;gap:5px}
+.login-card form select{display:block;width:100%;margin-top:5px;padding:12px;border:1px solid #d1dae4;border-radius:7px;color:#193654;background:#fff}
+@media(max-width:640px){.erp-cloud-status{left:12px;right:12px;bottom:12px;max-width:none}.erp-cloud-gate-card{padding:22px}.erp-cloud-gate{padding:12px}}
