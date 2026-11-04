@@ -60,4 +60,14 @@ assert.ok(!stockCode.includes('window.confirm('),'Inventário não deve usar di�
 const cashierCode=read('src/pages/Cashier.jsx');
 assert.ok(!cashierCode.includes("safeWrite('luxdecor-deliveries-v29'"),'Entrega não pode ser gravada fora da transação da venda');
 assert.ok(cashierCode.includes("...(deliveryRequired?{'luxdecor-deliveries-v29':nextDeliveries}:{})"),'Entrega deve estar incluída na transação local');
-console.log('OK: testes de vendedoras, produto, inventário, PDV e migrações.');
+const login=read('src/components/CloudLogin.jsx');
+assert.ok(login.includes('signInUsername')&&!login.includes('type="email"'),'Login deve pedir usuário e senha, não e-mail');
+assert.ok(login.includes('erpluxdecor-setup'),'Primeiro acesso deve exigir ativação protegida');
+const settings=read('src/pages/Settings.jsx');
+assert.ok(settings.includes('<UserManagement/>'),'Somente Admin deve gerenciar funcionários');
+assert.ok(stockCode.includes('changeArchived')&&stockCode.includes('restoreProduct'),'Arquivamento e restauração de produtos precisam existir');
+const movementCode=read('src/pages/Movements.jsx');
+assert.ok(movementCode.includes("type=\"date\"")&&movementCode.includes('detailType'),'Movimentações precisam ter filtros e detalhes');
+assert.ok(read('src/components/Sidebar.jsx').includes("['movements','Movimentações'"),'Movimentações devem aparecer no menu');
+console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
+
