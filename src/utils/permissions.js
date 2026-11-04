@@ -1,4 +1,4 @@
-import{getLocalSession}from'./auth';
+import{getLocalSession}from'./auth';import{cloudConfigured,getCloudSession}from'./cloudAuth';
 export const PERMISSIONS={
   Administrador:['*'],
   Gerente:['sales.create','sales.cancel','stock.move','stock.inventory','cash.open','cash.move','cash.close','purchase.receive','finance.write','fiscal.prepare','products.write','products.cost.view','reports.view'],
@@ -7,7 +7,7 @@ export const PERMISSIONS={
   Financeiro:['finance.write','fiscal.prepare','reports.view','products.cost.view'],
   Fiscal:['fiscal.prepare','reports.view']
 };
-export function currentRole(){return getLocalSession()?.role||localStorage.getItem('luxdecor-current-role')||'Administrador'}
+export function currentRole(){if(cloudConfigured())return getCloudSession()?.member?.role||'Sem acesso';return getLocalSession()?.role||'Sem acesso'}
 export function can(action,role=currentRole()){const list=PERMISSIONS[role]||[];return list.includes('*')||list.includes(action)}
 export function requirePermission(action){return{ok:can(action),role:currentRole(),action}}
 export const PAGE_ACCESS={
