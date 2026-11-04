@@ -51,7 +51,7 @@ export function safeWrite(key,value){
 }
 export function homeStorageEntries(){
   const storage={};
-  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(isHomeKey(k)&&!k.includes('__snapshot__'))storage[k]=localStorage.getItem(k)}}catch{}
+  try{const source=businessStorage();for(let i=0;i<source.length;i++){const k=source.key(i);if(isHomeKey(k)&&!k.includes('__snapshot__'))storage[k]=source.getItem(k)}}catch{}
   return storage;
 }
 export function createLocalSnapshot(label='auto'){
@@ -214,7 +214,7 @@ export function bootstrapStorage(){
 }
 export function storageHealth(){
   let keys=0,bytes=0,corrupt=0;
-  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!isHomeKey(k))continue;keys++;const v=localStorage.getItem(k)||'';bytes+=v.length;if(k.includes('__corrupt__')||k.includes('__invalid_shape__'))corrupt++}}catch{}
+  try{const source=businessStorage();for(let i=0;i<source.length;i++){const k=source.key(i);if(!isHomeKey(k))continue;keys++;const v=source.getItem(k)||'';bytes+=v.length;if(k.includes('__corrupt__')||k.includes('__invalid_shape__'))corrupt++}}catch{}
   return{keys,bytes,corrupt,version:localStorage.getItem(VERSION_KEY)||'legacy'};
 }
 export const STORAGE_KEYS={
