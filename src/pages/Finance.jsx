@@ -1,3 +1,4 @@
+import{erpStorage}from'../utils/storage';
 import React,{useEffect,useMemo,useState}from'react';
 import{Plus,ArrowDownLeft,ArrowUpRight,CheckCircle2,Upload,Download,LockKeyhole,Unlock,Trash2,Landmark,WalletCards,TrendingUp,ShieldAlert,Search,Pencil,Copy,History}from'lucide-react';
 import PageHeader from'../components/PageHeader';
@@ -74,7 +75,7 @@ export default function Finance({finance=[],setFinance,sales=[],products=[],invo
  const[bills,setBills]=useState(()=>safeReadArray('luxdecorerp-bills-v211',[]));
  const[bankRows,setBankRows]=useState(()=>safeReadArray('luxdecorerp-bank-rows-v211',[]));
  const[closings,setClosings]=useState(()=>safeReadArray('luxdecorerp-fin-closing-v211',[]));
- const[bankBalance,setBankBalance]=useState(()=>{try{return num(localStorage.getItem('luxdecorerp-bank-balance-v211'))}catch{return 0}});
+ const[bankBalance,setBankBalance]=useState(()=>{try{return num(erpStorage.getItem('luxdecorerp-bank-balance-v211'))}catch{return 0}});
  const[billOpen,setBillOpen]=useState(false);
  const[billScanning,setBillScanning]=useState(false);
  const[billPreview,setBillPreview]=useState('');
@@ -165,7 +166,7 @@ export default function Finance({finance=[],setFinance,sales=[],products=[],invo
  function addBudget(){if(!budgetForm.nature||num(budgetForm.amount)<=0)return toast('Informe natureza e valor.','warning','Orçamento');setBudgets([{id:uid('bud'),...budgetForm,amount:num(budgetForm.amount)},...budgetList]);setBudgetOpen(false)}
  function addNature(){if(!natureForm.name.trim())return toast('Informe o nome da natureza.','warning','Plano de contas');setNatures([{id:uid('nat'),...natureForm},...natureRows]);setNatureOpen(false)}
  function toggleClose(){if(!checkManagerPin(closePin))return toast('PIN gerencial inválido.','warning','Fechamento');const exists=closingRows.some(c=>c.month===closeMonth);setClosings(exists?closingRows.filter(c=>c.month!==closeMonth):[{month:closeMonth,at:new Date().toISOString(),user:currentRole()},...closingRows]);addAudit(exists?'Competência reaberta':'Competência fechada','Financeiro',closeMonth);setClosePin('');setCloseOpen(false);toast(exists?'Mês reaberto.':'Mês fechado.','success','Fechamento')}
- function saveBankBalance(){const value=num(reconcileValue);setBankBalance(value);try{localStorage.setItem('luxdecorerp-bank-balance-v211',String(value))}catch{}setReconcileOpen(false)}
+ function saveBankBalance(){const value=num(reconcileValue);setBankBalance(value);try{erpStorage.setItem('luxdecorerp-bank-balance-v211',String(value))}catch{}setReconcileOpen(false)}
  const collectionRows=useMemo(()=>entries.filter(x=>x.type==='receive'&&!['paid','cancelled'].includes(x.status)).map(x=>({...x,balance:Math.max(0,num(x.amount)-num(x.paidAmount)),daysLate:Math.max(0,Math.floor((new Date(isoToday()+'T12:00:00')-new Date(x.due+'T12:00:00'))/86400000))})).sort((a,b)=>b.daysLate-a.daysLate||a.due.localeCompare(b.due)),[entries]);
  const dreByCenter=useMemo(()=>{const m={};for(const x of entries){if(x.status==='cancelled')continue;const c=x.costCenter||'Sem centro';m[c]??={center:c,receive:0,pay:0};if(x.type==='receive')m[c].receive+=num(x.amount);else m[c].pay+=num(x.amount)}return Object.values(m).map(x=>({...x,result:x.receive-x.pay})).sort((a,b)=>b.result-a.result)},[entries]);
  const scenarioFactor=scenario==='optimistic'?1:(scenario==='pessimistic'?0.75:0.9);
