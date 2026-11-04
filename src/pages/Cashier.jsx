@@ -16,7 +16,7 @@ import{addAudit}from'../utils/audit';
 import{safeRead,safeWrite,createLocalSnapshot,commitLocalTransaction,STORAGE_KEYS}from'../utils/storage';
 import{uid,nextSequence}from'../utils/ids';
 import{can,currentRole}from'../utils/permissions';
-import{getLocalSession}from'../utils/auth';import{activeSalespeople,sellerByName,sellerCommission,sellerDiscountLimit,verifySellerPin}from'../utils/commercial';import{checkManagerPin}from'../utils/managerPin';
+import{getCloudSession}from'../utils/cloudAuth';import{activeSalespeople,sellerByName,sellerCommission,sellerDiscountLimit,verifySellerPin}from'../utils/commercial';import{checkManagerPin}from'../utils/managerPin';
 
 const paymentOptions=['Dinheiro','Pix','Cartão de crédito','Cartão de débito','Transferência','Boleto','Crediário','Crédito da loja'];
 const immediate=['Dinheiro','Pix','Cartão de crédito','Cartão de débito','Transferência'];
@@ -45,7 +45,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const[category,setCategory]=useState('Todos');
   const[seller,setSeller]=useState('');
   const sellerOptions=activeSalespeople();
-  const authSession=getLocalSession();
+  const authSession=getCloudSession()?.member;
   const operator=authSession?.name||authSession?.username||currentRole();
   const[client,setClient]=useState('Consumidor final');
   const[discountType,setDiscountType]=useState('value');
