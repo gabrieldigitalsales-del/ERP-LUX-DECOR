@@ -47,16 +47,16 @@ export function compactProduct(p={}){
   }=p;
   return {
     ...rest,
-    fornecedor:nullable(p.fornecedor??supplier),
-    categoria:nullable(p.categoria??category),
-    nome_produto:nullable(p.nome_produto??name),
-    sku_ref:nullable(p.sku_ref??sku??reference),
-    cor_acabamento:nullable(p.cor_acabamento??color),
-    tamanho_medida:nullable(p.tamanho_medida??sizeLabel),
-    variante:nullable(p.variante??variant),
-    preco_final:money2(p.preco_final??price),
-    observacoes:nullable(p.observacoes??notes),
-    origem_tabela:nullable(p.origem_tabela??sourceTable)
+    fornecedor:nullable(supplier??p.fornecedor),
+    categoria:nullable(category??p.categoria),
+    nome_produto:nullable(name??p.nome_produto),
+    sku_ref:nullable(sku??reference??p.sku_ref),
+    cor_acabamento:nullable(color??p.cor_acabamento),
+    tamanho_medida:nullable(sizeLabel??p.tamanho_medida),
+    variante:nullable(variant??p.variante),
+    preco_final:money2(price??p.preco_final),
+    observacoes:nullable(notes??p.observacoes),
+    origem_tabela:nullable(sourceTable??p.origem_tabela)
   };
 }
 
