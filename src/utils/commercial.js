@@ -31,11 +31,11 @@ export function getSalespeople(){
   const seededDemo=x=>DEMO_NAMES.has(normalizedName(x.name))&&['seller-1','seller-2'].includes(String(x.id));
   const foundSeeded=rows.some(seededDemo);
   rows=rows.filter(x=>!seededDemo(x));
-  if((!cloudConfigured()||getCloudSession()?.member?.role==='Administrador')&&(erpStorage.getItem(DEMO_CLEANED_KEY)!=='1'||foundSeeded)){
+  if((!cloudConfigured()||Boolean(getCloudSession()?.member?.tenant_owner_id))&&(erpStorage.getItem(DEMO_CLEANED_KEY)!=='1'||foundSeeded)){
     erpStorage.setItem(KEY,JSON.stringify(rows));
     erpStorage.setItem(LEGACY,JSON.stringify(rows.filter(x=>x.active!==false).map(x=>x.name)));
     erpStorage.setItem(DEMO_CLEANED_KEY,'1');
-  }else if(!Array.isArray(current)&&(!cloudConfigured()||getCloudSession()?.member?.role==='Administrador')){
+  }else if(!Array.isArray(current)&&(!cloudConfigured()||Boolean(getCloudSession()?.member?.tenant_owner_id))){
     erpStorage.setItem(KEY,JSON.stringify(rows));
   }
   return rows;
@@ -63,13 +63,13 @@ export function saveSalespeople(rows=[]){
    erpStorage.setItem(KEY,payload);
    erpStorage.setItem(LEGACY,legacyPayload);
    if(erpStorage.getItem(KEY)!==payload||erpStorage.getItem(LEGACY)!==legacyPayload){
-     throw new Error('O navegador não confirmou a gravação da lista.');
+     throw new Error('A lista não foi confirmada no armazenamento.');
    }
    erpStorage.setItem(DEMO_CLEANED_KEY,'1');
  }catch(error){
    try{before===null?erpStorage.removeItem(KEY):erpStorage.setItem(KEY,before);
        previousLegacy===null?erpStorage.removeItem(LEGACY):erpStorage.setItem(LEGACY,previousLegacy)}catch{}
-   throw new Error('Falha ao salvar vendedoras no navegador: '+String(error.message||error));
+   throw new Error('Falha ao salvar vendedoras: '+String(error.message||error));
  }
  window.dispatchEvent(new CustomEvent('luxdecor-salespeople-updated',{detail:{count:normalized.length}}));
  return normalized;
