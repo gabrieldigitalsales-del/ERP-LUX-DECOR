@@ -4,18 +4,18 @@ import PageHeader from'../components/PageHeader';
 import{toast}from'../components/ToastHost';
 import{getSalespeople,saveSalespeople}from'../utils/commercial';
 import{flushCloudWrites}from'../services/cloudStore';
-import{currentRole}from'../utils/permissions';
+import{can}from'../utils/permissions';
 import{addAudit}from'../utils/audit';
 const blank=()=>({id:'seller-'+crypto.randomUUID(),name:'',active:true,pin:'',commission:null,target:0,discountLimit:null});
 export default function Salespeople(){
  const[rows,setRows]=useState(()=>getSalespeople()),[busy,setBusy]=useState(false);
  const[dirty,setDirty]=useState(false);
- const admin=currentRole()==='Administrador';
+ const admin=can('products.write');
  const edit=(index,key,value)=>{setDirty(true);setRows(current=>current.map((x,i)=>i===index?{...x,[key]:value}:x))};
  const add=()=>{setDirty(true);setRows(x=>[...x,blank()])};
  const remove=index=>{setDirty(true);setRows(x=>x.filter((_,i)=>i!==index))};
  const save=async()=>{
-  if(!admin)return toast('Somente o administrador pode cadastrar vendedoras.','warning','Permissão');
+  if(!admin)return toast('Entre com um usuário da Lux Decor para cadastrar vendedoras.','warning','Permissão');
   if(busy)return;setBusy(true);
   try{
    const saved=saveSalespeople(rows);
