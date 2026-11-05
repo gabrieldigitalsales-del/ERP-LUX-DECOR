@@ -25,7 +25,7 @@ export default function Stock({products,setProducts,movements=[],setMovements,sa
  const deleteProduct=async()=>{
   const p=deleteTarget;
   if(!p)return;
-  if(currentRole()!=='Administrador')return toast('Somente o administrador pode excluir cadastros.','warning','Permissão');
+  if(!can('products.write'))return toast('Acesso ativo necessário para excluir cadastros.','warning','Permissão');
   const blockers=deleteProtection(p);
   if(blockers.length)return toast('Não é possível excluir este produto. Use Arquivar.','warning','Estoque');
   if(deleteConfirmation.trim()!==String(p.sku||p.name).trim())return toast('Digite o código do produto para confirmar.','warning','Confirmação');
@@ -42,7 +42,7 @@ export default function Stock({products,setProducts,movements=[],setMovements,sa
  const importInventory=()=>{if(!can('products.write'))return toast('Sem permissão para cadastrar produtos.','warning','Estoque');const suppressed=new Set(safeRead('luxdecor-deleted-seed-ids-v1',[]));const merged=mergeLuxInventory(products);const result={products:merged.products.filter(p=>!suppressed.has(String(p.id))),inserted:merged.products.filter(p=>!suppressed.has(String(p.id))).length-products.length};if(!result.inserted)return toast('Os produtos da relação já estão cadastrados.','info','Estoque');setImportConfirm(true)};
  const confirmImportInventory=async ()=>{const suppressed=new Set(safeRead('luxdecor-deleted-seed-ids-v1',[]));const merged=mergeLuxInventory(products);const result={products:merged.products.filter(p=>!suppressed.has(String(p.id))),inserted:merged.products.filter(p=>!suppressed.has(String(p.id))).length-products.length};if(!result.inserted){setImportConfirm(false);return}const tx=await commitLocalTransaction('lux-inventory-import',{[STORAGE_KEYS.products]:result.products});if(!tx.ok)return toast('Não foi possível gravar o inventário.','warning','Estoque');setProducts(result.products);setImportConfirm(false);addAudit('Relação de estoque importada','Estoque',result.inserted+' novos itens');toast(result.inserted+' produtos adicionados sem substituir os existentes.','success','Estoque')};
  const changeArchived=async(p,archive)=>{
-  if(currentRole()!=='Administrador')return toast('Apenas o administrador pode arquivar ou restaurar produtos.','warning','Permissão');
+  if(!can('products.write'))return toast('Acesso ativo necessário para arquivar ou restaurar produtos.','warning','Permissão');
   if(archive&&(Number(p.reserved)||0)>0)return toast('Há unidades reservadas. Libere as reservas antes de arquivar.','warning','Estoque');
   const next=products.map(x=>String(x.id)===String(p.id)?{...x,active:!archive,archivedAt:archive?new Date().toISOString():null}:x);
   const now=new Date().toISOString(),current=safeRead(STORAGE_KEYS.movements,[]);
@@ -108,11 +108,11 @@ export default function Stock({products,setProducts,movements=[],setMovements,sa
     <button onClick={()=>chooseAction(actionProduct,'transfer')}><ArrowLeftRight size={18}/><span><b>Alterar localização</b><small>Ex.: depósito para showroom; não reduz unidades</small></span><ChevronRight size={16}/></button>
     <button onClick={()=>chooseAction(actionProduct,'showroom')}><Store size={18}/><span><b>{actionProduct.stockType==='Mostruário'?'Retirar do mostruário':'Marcar como mostruário'}</b><small>Identifica o produto como peça de exposição</small></span><ChevronRight size={16}/></button>
     <button onClick={()=>chooseAction(actionProduct,'order')}><Truck size={18}/><span><b>{actionProduct.madeToOrder?'Desativar encomendas':'Permitir venda sob encomenda'}</b><small>Controla se pode ser vendido sem pronta-entrega</small></span><ChevronRight size={16}/></button>
-    {currentRole()==='Administrador'&&<button className="danger" onClick={()=>chooseAction(actionProduct,'archive')}><Trash2 size={18}/><span><b>Arquivar produto</b><small>Oculta do catálogo ativo, sem apagar o histórico</small></span><ChevronRight size={16}/></button>}
-    {currentRole()==='Administrador'&&<button className="danger" onClick={()=>chooseAction(actionProduct,'delete')}><Trash2 size={18}/><span><b>Excluir definitivamente</b><small>Somente itens sem estoque, reservas nem histórico de movimentação ou venda</small></span><ChevronRight size={16}/></button>}
+    {can('products.write')&&<button className="danger" onClick={()=>chooseAction(actionProduct,'archive')}><Trash2 size={18}/><span><b>Arquivar produto</b><small>Oculta do catálogo ativo, sem apagar o histórico</small></span><ChevronRight size={16}/></button>}
+    {can('products.write')&&<button className="danger" onClick={()=>chooseAction(actionProduct,'delete')}><Trash2 size={18}/><span><b>Excluir definitivamente</b><small>Somente itens sem estoque, reservas nem histórico de movimentação ou venda</small></span><ChevronRight size={16}/></button>}
    </>}
-   {actionProduct.active===false&&currentRole()==='Administrador'&&<button onClick={()=>chooseAction(actionProduct,'restore')}><RotateCcw size={18}/><span><b>Restaurar produto</b><small>Reativa o cadastro e o acesso no estoque</small></span><ChevronRight size={16}/></button>}
-    {actionProduct.active===false&&currentRole()==='Administrador'&&<button className="danger" onClick={()=>chooseAction(actionProduct,'delete')}><Trash2 size={18}/><span><b>Excluir definitivamente</b><small>Disponível apenas quando não houver registros vinculados</small></span><ChevronRight size={16}/></button>}
+   {actionProduct.active===false&&can('products.write')&&<button onClick={()=>chooseAction(actionProduct,'restore')}><RotateCcw size={18}/><span><b>Restaurar produto</b><small>Reativa o cadastro e o acesso no estoque</small></span><ChevronRight size={16}/></button>}
+    {actionProduct.active===false&&can('products.write')&&<button className="danger" onClick={()=>chooseAction(actionProduct,'delete')}><Trash2 size={18}/><span><b>Excluir definitivamente</b><small>Disponível apenas quando não houver registros vinculados</small></span><ChevronRight size={16}/></button>}
   </div>
  </Modal>}
  {deleteTarget&&<Modal title="Excluir produto definitivamente" subtitle={deleteTarget.name} onClose={()=>{setDeleteTarget(null);setDeleteConfirmation('')}}>
