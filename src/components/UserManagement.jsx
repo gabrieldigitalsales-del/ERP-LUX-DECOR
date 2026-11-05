@@ -43,7 +43,7 @@ export default function UserManagement(){
    <label><span>Login do novo usuário</span><input required minLength={3} maxLength={30} value={username} onChange={e=>setUsername(e.target.value.toLowerCase())} placeholder="Ex.: maria.vendas" autoComplete="off"/></label>
    <label><span>Senha inicial (mín. 6)</span><div className="lux-user-password"><input required type={show?'text':'password'} minLength={6} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Defina a senha inicial"/><button type="button" onClick={()=>setShow(a=>!a)} title="Mostrar/ocultar senha">{show?<EyeOff size={15}/>:<Eye size={15}/>}</button></div></label>
    <label><span>Perfil</span><select value={role} onChange={e=>setRoleDefault(e.target.value)}>{Object.keys(rolePages).map(x=><option key={x}>{x}</option>)}</select></label>
-   <div className="lux-user-permissions"><strong>Acesso completo</strong><text>Todos os usuários ativos utilizam as mesmas funções do ERP.</text></div>
+   <div className="lux-user-permissions"><strong>Acesso completo</strong><p>Todos os usuários ativos utilizam as mesmas funções do ERP.</p></div>
    <button type="submit" className="primary" disabled={busy}><UserPlus size={15}/>Criar usuário</button>
   </form>
   <div className="lux-user-list"><h4>Usuários cadastrados</h4>
