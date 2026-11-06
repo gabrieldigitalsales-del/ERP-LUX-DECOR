@@ -1,4 +1,4 @@
-const CACHE='luxdecor-erp-v2.21.1-favicon-lux';
+const CACHE='luxdecor-erp-v2.21.1-favicon-lux-ld3';
 const OFFLINE_URL='/index.html';
 const CORE=['/','/index.html','/site.webmanifest','/lux-erp-192.png','/lux-erp-512.png','/apple-touch-icon.png','/favicon-lux.svg'];
 
