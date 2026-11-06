@@ -73,5 +73,13 @@ assert.ok(stockCode.includes('const deleteProduct=async()=>'),'Exclusão real de
 assert.ok(stockCode.includes('deleteProtection(p)')&&stockCode.includes('STORAGE_KEYS.sales')&&stockCode.includes('STORAGE_KEYS.movements'),'Exclusão exige checagem do histórico');
 assert.ok(stockCode.includes("deleteConfirmation.trim()!==String(p.sku||p.name).trim()"),'Exclusão exige confirmação por código');
 assert.ok(stockCode.includes('luxdecor-deleted-seed-ids-v1'),'Produtos excluídos não devem reaparecer ao importar');
+assert.ok(cashierCode.includes("const[openValue,setOpenValue]=useState('');"),'Caixa não pode iniciar com R$ 200 de fundo implícito');
+assert.ok(cashierCode.includes("currentRole()==='Administrador'&&<div className=\"pdv-optional-opening\""),'Apenas administrador vê opção de fundo inicial');
+assert.ok(cashierCode.includes('const opening=Math.max(0,Number(openValue)||0)'), 'Caixa deve abrir normalmente com R$ 0,00');
+const productsNoFiscal=read('src/pages/Products.jsx');
+assert.ok(!productsNoFiscal.includes('quick-ncm-search')&&!productsNoFiscal.includes('NCM pendente'),'O cadastro não deve pedir NCM');
+assert.ok(!read('src/pages/Finance.jsx').includes('Financeiro & Fiscal'),'Financeiro não deve exibir módulo Fiscal');
+assert.ok(!read('src/pages/Sales.jsx').includes('<span>Fiscal</span>'),'Fluxo de vendas sem etapa fiscal');
+assert.ok(!read('src/pages/Settings.jsx').includes('luxdecor-fiscal-'),'Configurações não devem gravar campos fiscais legados');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
