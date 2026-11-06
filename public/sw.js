@@ -1,6 +1,6 @@
-const CACHE='luxdecor-erp-v2.21.1';
+const CACHE='luxdecor-erp-v2.21.1-favicon-lux';
 const OFFLINE_URL='/index.html';
-const CORE=['/','/index.html','/site.webmanifest','/lux-erp-192.png','/lux-erp-512.png','/apple-touch-icon.png','/favicon.ico'];
+const CORE=['/','/index.html','/site.webmanifest','/lux-erp-192.png','/lux-erp-512.png','/apple-touch-icon.png','/favicon-lux.svg'];
 
 async function cacheAppShell(){
   const cache=await caches.open(CACHE);
