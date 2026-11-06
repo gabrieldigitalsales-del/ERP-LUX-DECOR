@@ -35,7 +35,7 @@ for(const [name,v] of Object.entries({...pkg.dependencies,...pkg.devDependencies
 const storage=fs.readFileSync(path.join(src,'utils/storage.js'),'utf8');
 if(!storage.includes(`APP_SCHEMA_VERSION='${pkg.version}'`))issues.push(`storage.js: versão de schema diferente de ${pkg.version}`);
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-if(!html.includes(`LUX DECOR ERP ${pkg.version}`))issues.push(`index.html: título não está na versão ${pkg.version}`);
+if(!html.includes('<title>LUX DECOR</title>'))issues.push('index.html: título da aba precisa ser apenas LUX DECOR');
 const sw=fs.readFileSync(path.join(root,'public/sw.js'),'utf8');
 if(!sw.includes(`luxdecor-erp-v${pkg.version}`))issues.push(`sw.js: cache não está na versão ${pkg.version}`);
 if(!sw.includes("url.pathname.startsWith('/api/')"))issues.push('sw.js: rotas /api não estão excluídas do cache');
