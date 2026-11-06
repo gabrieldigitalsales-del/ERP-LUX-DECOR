@@ -1047,3 +1047,9 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-salespeople-unsaved{font-size:11px;color:#9d6218;margin:0}
 @media(max-width:1100px){.lux-salespeople-row{grid-template-columns:repeat(3,minmax(0,1fr))}.lux-salespeople-name{grid-column:span 2}}
 @media(max-width:650px){.lux-salespeople-row{grid-template-columns:repeat(2,minmax(0,1fr))}.lux-salespeople-name{grid-column:1/-1}.lux-salespeople-row label span{font-size:10px}}
+
+
+/* Caixa de balcão: abertura direta, sem exigir fundo de troco */
+.pdv-optional-opening{grid-column:1/-1;display:flex;flex-direction:column;gap:9px}
+.pdv-optional-opening-toggle{align-self:flex-start;padding:4px 0!important;border:0!important;background:transparent!important;color:#63758c!important;font-size:11px!important;font-weight:550!important;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.pdv-optional-opening .pdv-opening-field{margin:0}
