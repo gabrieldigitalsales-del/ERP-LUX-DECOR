@@ -171,7 +171,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
         if(!p.madeToOrder&&hit.qty>=available){toast('Quantidade máxima disponível atingida.','warning','Estoque');return a}
         return a.map(x=>String(x.productId)===String(p.id)?{...x,qty:x.qty+1}:x);
       }
-      return[...a,{productId:p.id,name:p.name,sku:p.sku,price:Number(p.price)||0,cost:Number(p.cost)||0,qty:1,ncm:p.ncm||'',category:p.category||''}];
+      return[...a,{productId:p.id,name:p.name,sku:p.sku,price:Number(p.price)||0,cost:Number(p.cost)||0,qty:1,category:p.category||''}];
     });
   };
 
