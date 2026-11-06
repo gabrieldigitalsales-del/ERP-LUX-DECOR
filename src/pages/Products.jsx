@@ -88,7 +88,7 @@ export default function Products({ products, setProducts, setPage, sales = [] })
   useEffect(() => { setProductPage(1); }, [q, filter]);
   useEffect(() => { if (productPage > totalPages) setProductPage(totalPages); }, [productPage, totalPages]);
 
-  const startNew = () => { setDraft(createBlankProduct()) setModal(true); };
+  const startNew = () => { setDraft(createBlankProduct()); setModal(true); };
 
   const gen = () => {
     if (!draft?.name?.trim()) return toast('Descreva o produto para gerar o cadastro.', 'warning', 'Cadastro de produto');
