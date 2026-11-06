@@ -14,7 +14,7 @@ const masterSuppliers=[];
 const LEGACY_PREFIX='luxdecor-';
 const ERP_PREFIX='luxdecorerp-';
 const VERSION_KEY='luxdecor-app-schema-version';
-export const APP_SCHEMA_VERSION='2.21.0';
+export const APP_SCHEMA_VERSION='2.21.1';
 const isHomeKey=k=>Boolean(k&&(k.startsWith(LEGACY_PREFIX)||k.startsWith(ERP_PREFIX)));
 
 export function safeRead(key,fallback){
