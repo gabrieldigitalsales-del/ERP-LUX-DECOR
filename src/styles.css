@@ -867,15 +867,6 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .sidebar .company-pill b{color:#141922!important}.sidebar .company-pill small{color:#64748b!important}
 .sidebar .status-dot{background:#102e68!important;box-shadow:0 0 0 4px #e9eef6!important}
 
-/* Importação de inventário Lux Decor */
-.lux-stock-import-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;margin:0 0 14px;background:#fff;border:1px solid #e5e9ee;border-radius:7px}
-.lux-stock-import-bar>div{display:flex;flex-direction:column;gap:4px}
-.lux-stock-import-bar b{font-size:13px;color:#171b22}
-.lux-stock-import-bar small{font-size:11px;color:#59616c}
-.lux-stock-import-bar button{display:flex;align-items:center;gap:7px;padding:10px 12px;background:#163d74;color:white;border:0;border-radius:5px;cursor:pointer;white-space:nowrap}
-@media(max-width:720px){.lux-stock-import-bar{align-items:stretch;flex-direction:column}.lux-stock-import-bar button{justify-content:center}}
-
-
 /* Lux Decor • identidade premium • login e modais */
 .login-screen{background:radial-gradient(circle at 20% 10%,#eaf0f9 0%,transparent 40%),linear-gradient(145deg,#f7f9fc,#e9edf3)!important}
 .login-card{border:1px solid #dce3ed!important;border-radius:14px!important;box-shadow:0 28px 85px rgba(17,36,69,.12)!important}
