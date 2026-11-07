@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from '../assets/lux-logo-bw.png';
+import logo from '../assets/lux-logo.png';
 
 export default function LoadingScreen(){
   return <div className="app-loading" aria-label="Carregando Lux Decor">
