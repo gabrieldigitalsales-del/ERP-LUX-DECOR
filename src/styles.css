@@ -1085,3 +1085,18 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-pdv-quote-save:hover:not(:disabled){background:#e4eefb;border-color:#7fa3cf}
 .lux-pdv-quote-save:disabled{opacity:.45;cursor:not-allowed}
 .lux-pdv-quote-pending{margin:4px 0 10px;padding:9px 11px;border:1px solid #e7cf9d;background:#fff9ed;border-radius:5px;color:#815f27;font-size:11px;line-height:1.45}
+
+
+/* PDV: definição pontual de preços pendentes na etapa de pagamento. */
+.lux-pdv-price-panel{border:1px solid #d7e1ed;background:#f6f9fd;border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px;margin-bottom:15px}
+.lux-pdv-price-panel>div:first-child{display:flex;flex-direction:column;gap:4px}
+.lux-pdv-price-panel>div:first-child>b{font-size:13px;color:#143a63}
+.lux-pdv-price-panel small{font-size:11px;color:#647b92}
+.lux-pdv-price-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:10px;border-top:1px solid #dfe7f1}
+.lux-pdv-price-line>span:first-child{display:flex;flex-direction:column;gap:4px;min-width:0}
+.lux-pdv-price-line>span:first-child b{font-size:12px;color:#1b344f;overflow-wrap:anywhere}
+.lux-pdv-price-control{display:flex;flex-direction:column;gap:5px;min-width:128px;width:40%;max-width:180px}
+.lux-pdv-price-control input{border:1px solid #adbed4;border-radius:5px;background:#fff;width:100%;min-height:38px;padding:8px 10px;font-size:13px;color:#173957}
+.lux-pdv-price-control input:focus{border-color:#235f9b;outline:2px solid #235f9b26}
+.lux-pdv-price-panel p{margin:0;font-size:11px;color:#805a28;background:#fff5e4;padding:8px;border-radius:4px;line-height:1.5}
+@media(max-width:560px){.lux-pdv-price-line{align-items:stretch;flex-direction:column}.lux-pdv-price-control{width:100%;max-width:none}}
