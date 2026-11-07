@@ -81,5 +81,20 @@ assert.ok(!productsNoFiscal.includes('quick-ncm-search')&&!productsNoFiscal.incl
 assert.ok(!read('src/pages/Finance.jsx').includes('Financeiro & Fiscal'),'Financeiro não deve exibir módulo Fiscal');
 assert.ok(!read('src/pages/Sales.jsx').includes('<span>Fiscal</span>'),'Fluxo de vendas sem etapa fiscal');
 assert.ok(!read('src/pages/Settings.jsx').includes('luxdecor-fiscal-'),'Configurações não devem gravar campos fiscais legados');
+const unified=read('src/pages/InventoryHub.jsx');
+assert.ok(unified.includes('<Stock embedded')&&unified.includes('<Products embedded'),'Produtos e Estoque devem compartilhar um módulo');
+const sidebar=read('src/components/Sidebar.jsx');
+assert.ok(sidebar.includes("['stock','Produtos e Estoque'")&&!sidebar.includes("['products','Produtos'"),'Menu principal não deve duplicar Produtos e Estoque');
+const app=read('src/App.jsx');
+assert.ok(app.includes('<InventoryHub')&&!app.includes('setNotifications')&&!app.includes('deriveAlerts'),'Aplicação deve utilizar módulo unificado sem notificações');
+const topbar=read('src/components/Topbar.jsx');
+assert.ok(!topbar.includes('Bell')&&!topbar.includes('Notificações'),'Sininho e notificações devem desaparecer do cabeçalho');
+const cloudGate=read('src/CloudGate.jsx');
+assert.ok(cloudGate.includes('LoadingScreen persist')&&cloudGate.includes('stage===\'checking\''),'A logo deve carregar antes do login');
+const loadingScreen=read('src/components/LoadingScreen.jsx');
+assert.ok(loadingScreen.includes('lux-logo.png'),'Tela de carregamento deve usar logo original da Lux Decor');
+assert.ok(!read('src/utils/erpEngine.js').includes('auto-ncm'),'Não gerar alertas NCM');
+assert.ok(!fs.existsSync(path.join(root,'src/services/ncmService.js')),'Serviço NCM legado não deve existir');
+assert.ok(!fs.existsSync(path.join(root,'src/data/ncmTable.json')),'Tabela NCM legada não deve carregar no ERP');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
