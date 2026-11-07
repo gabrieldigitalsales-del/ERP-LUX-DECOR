@@ -86,9 +86,12 @@ assert.ok(unified.includes('<Stock embedded')&&unified.includes('<Products embed
 const sidebar=read('src/components/Sidebar.jsx');
 assert.ok(sidebar.includes("['stock','Produtos e Estoque'")&&!sidebar.includes("['products','Produtos'"),'Menu principal não deve duplicar Produtos e Estoque');
 const app=read('src/App.jsx');
-assert.ok(app.includes('<InventoryHub')&&!app.includes('setNotifications')&&!app.includes('deriveAlerts'),'Aplicação deve utilizar módulo unificado sem notificações');
+assert.ok(app.includes('<InventoryHub')&&app.includes('setNotifications')&&!app.includes('deriveAlerts'),'Aplicação deve manter módulo unificado e notificações operacionais');
 const topbar=read('src/components/Topbar.jsx');
-assert.ok(!topbar.includes('Bell')&&!topbar.includes('Notificações'),'Sininho e notificações devem desaparecer do cabeçalho');
+assert.ok(topbar.includes('Bell')&&topbar.includes('Marcar lidas'),'Sininho e leitura de notificações devem estar ativos');
+const operational=read('src/utils/operationalNotifications.js');
+assert.ok(operational.includes('auto-low')&&operational.includes('auto-overdue')&&operational.includes('auto-reservation'),'Avisos úteis de estoque, contas e reservas devem existir');
+assert.ok(!operational.includes("id:'auto-ncm'")&&!operational.includes("id:'auto-nf'"),'Alertas NCM e fiscais não podem ser gerados');
 const cloudGate=read('src/CloudGate.jsx');
 assert.ok(cloudGate.includes('LoadingScreen persist')&&cloudGate.includes('stage===\'checking\''),'A logo deve carregar antes do login');
 const loadingScreen=read('src/components/LoadingScreen.jsx');
