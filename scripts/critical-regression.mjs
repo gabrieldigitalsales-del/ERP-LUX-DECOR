@@ -116,5 +116,8 @@ assert.ok(pdvFinal.includes('disabled={finalizing||total<=0||cart.some(i=>!(Numb
 assert.ok(pdvFinal.includes("return[...rows,{productId:p.id")&&pdvFinal.includes("pricePending:!(Number(p.price)>0)"),'Preço pendente deve entrar no carrinho sem salvar cotação');
 assert.ok(pdvFinal.includes("disabled={!session||!cart.length}")&&!pdvFinal.includes("disabled={!session||!cart.length||cart.some"),'Pagamento deve abrir mesmo com preço pendente');
 assert.ok(pdvFinal.includes("if(availableFor(p)<=0&&!p.madeToOrder)return toast"),'Produto sem estoque segue bloqueado');
+assert.ok(!pdvFinal.includes('pdv-quick-pay')&&!pdvFinal.includes('pdv-payment-methods'),'Não pode haver dois seletores de pagamento');
+assert.ok(pdvFinal.includes('PAGAMENTO<small>F8')&&pdvFinal.includes('onClick={()=>openCheckout()}'),'Deve existir um único botão Pagamento no PDV');
+assert.ok(pdvFinal.includes('<b>Forma de pagamento</b>')&&pdvFinal.includes('paymentRows.map((p,i)'), 'A forma e o valor de pagamento devem ser preenchidos em um único modal');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
