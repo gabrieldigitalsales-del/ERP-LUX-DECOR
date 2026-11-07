@@ -24,6 +24,7 @@ const paymentIcon={
   'Dinheiro':Banknote,'Pix':ScanLine,'Cartão de crédito':CreditCard,'Cartão de débito':CreditCard,
   'Transferência':Landmark,'Boleto':ReceiptText,'Crediário':NotebookText,'Crédito da loja':WalletCards
 };
+const normalizePdvSearch=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/\s+/g,' ').trim();
 const getCommissionRate=()=>Number(erpStorage.getItem('luxdecor-commission-rate')||2);
 const useLocal=(key,seed)=>{
   const[state,setState]=useState(()=>safeRead(key,seed));
@@ -43,6 +44,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const[held,setHeld]=useLocal(STORAGE_KEYS.held,[]);
 
   const[q,setQ]=useState('');
+  const[orderTarget,setOrderTarget]=useState(null);
   const[category,setCategory]=useState('Todos');
   const[seller,setSeller]=useState('');
   const sellerOptions=activeSalespeople();
@@ -91,12 +93,13 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
 
   const categories=useMemo(()=>['Todos',...Array.from(new Set(products.filter(p=>p.active!==false).map(p=>p.category).filter(Boolean))).sort()], [products]);
   const filtered=useMemo(()=>{
-    const term=q.trim().toLowerCase();
+    const terms=normalizePdvSearch(q).split(' ').filter(Boolean);
     return products.filter(p=>{
       if(p.active===false)return false;
       if(category!=='Todos'&&p.category!==category)return false;
-      if(!term)return true;
-      return `${p.name||''} ${p.sku||''} ${p.reference||''} ${p.category||''} ${p.brand||''} ${p.supplier||''} ${p.variant||''} ${p.color||''} ${p.sizeLabel||''}`.toLowerCase().includes(term);
+      if(!terms.length)return true;
+      const searchable=normalizePdvSearch(`${p.name||''} ${p.sku||''} ${p.reference||''} ${p.category||''} ${p.brand||''} ${p.supplier||''} ${p.variant||''} ${p.color||''} ${p.sizeLabel||''}`);
+      return terms.every(term=>searchable.includes(term));
     }).slice(0,60);
   },[products,q,category]);
 
@@ -157,27 +160,31 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   },[cart,total,session]);
 
   const availableFor=p=>Math.max(0,(Number(p?.stock)||0)-(Number(p?.reserved)||0));
-  const canSell=p=>Boolean(p?.active!==false&&(p.madeToOrder||(!p.inventoryPending&&availableFor(p)>0))&&Number(p.price)>0);
+  const orderNeeded=p=>p?.inventoryPending===true||(!p?.madeToOrder&&availableFor(p)<=0);
+  const isOrderItem=i=>Boolean(i?.pendingOrder);
 
-  const add=p=>{
+  const add=(p,confirmedOrder=false)=>{
     if(!session)return toast('Abra o caixa antes de iniciar uma venda.','warning','Caixa fechado');
+    if(p.active===false)return toast('Este produto está arquivado.','warning','Produto indisponível');
+    if(!(Number(p.price)>0))return toast('Este produto ainda não tem preço. Cadastre o preço em Produtos e Estoque antes de vender.','warning','Preço pendente');
+    const order=confirmedOrder||Boolean(p.madeToOrder);
+    if(orderNeeded(p)&&!order){setOrderTarget(p);return}
     const available=availableFor(p);
-    if(p.inventoryPending&&!p.madeToOrder)return toast('Estoque ainda não conferido. Confirme a quantidade no módulo Estoque.','warning','Estoque pendente');
-    if(!(Number(p.price)>0))return toast('Defina o preço do produto no cadastro antes de vender.','warning','Preço pendente');
-    if(available<=0&&!p.madeToOrder)return toast('Produto sem estoque disponível.','warning','Estoque');
-    setCart(a=>{
-      const hit=a.find(x=>String(x.productId)===String(p.id));
+    setCart(rows=>{
+      const hit=rows.find(x=>String(x.productId)===String(p.id));
       if(hit){
-        if(!p.madeToOrder&&hit.qty>=available){toast('Quantidade máxima disponível atingida.','warning','Estoque');return a}
-        return a.map(x=>String(x.productId)===String(p.id)?{...x,qty:x.qty+1}:x);
+        const orderLine=isOrderItem(hit)||order;
+        if(!orderLine&&hit.qty>=available){toast('Quantidade máxima disponível atingida.','warning','Estoque');return rows}
+        return rows.map(x=>String(x.productId)===String(p.id)?{...x,qty:x.qty+1,pendingOrder:orderLine}:x);
       }
-      return[...a,{productId:p.id,name:p.name,sku:p.sku,price:Number(p.price)||0,cost:Number(p.cost)||0,qty:1,category:p.category||''}];
+      return[...rows,{productId:p.id,name:p.name,sku:p.sku,price:Number(p.price)||0,cost:Number(p.cost)||0,qty:1,category:p.category||'',pendingOrder:order}];
     });
   };
 
   const setQty=(id,value)=>{
     const p=products.find(x=>String(x.id)===String(id));
-    const max=p?.madeToOrder?999:availableFor(p);
+    const cartLine=cart.find(x=>String(x.productId)===String(id));
+    const max=(p?.madeToOrder||isOrderItem(cartLine))?999:availableFor(p);
     const next=Math.max(1,Math.min(max,Number(value)||1));
     setCart(a=>a.map(i=>String(i.productId)===String(id)?{...i,qty:next}:i));
   };
@@ -292,7 +299,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(invalidPrice)return toast(`Defina o preço de ${invalidPrice.name} antes de concluir a venda.`,'warning','Preço pendente');
     const lacking=cart.find(i=>{
       const p=products.find(x=>String(x.id)===String(i.productId));
-      return !p||(!p.madeToOrder&&(p.inventoryPending||availableFor(p)<i.qty));
+      return !p||p.active===false||(!(p.madeToOrder||isOrderItem(i))&&(p.inventoryPending||availableFor(p)<i.qty));
     });
     if(lacking)return toast(`Estoque insuficiente para ${lacking.name}.`,'warning','Venda bloqueada');
     if(Math.abs(paymentTotal-total)>.01)return toast('A soma dos pagamentos precisa fechar exatamente o total da venda.','warning','Pagamento');
@@ -316,9 +323,10 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
       const nextSales=[sale,...sales];
       const nextProducts=products.map(p=>{
         const i=cart.find(x=>String(x.productId)===String(p.id));
-        return i?{...p,stock:p.madeToOrder?(Number(p.stock)||0):Math.max(0,(Number(p.stock)||0)-i.qty),lastSaleAt:now,pendingOrderQty:p.madeToOrder?(Number(p.pendingOrderQty)||0)+i.qty:(Number(p.pendingOrderQty)||0)}:p;
+        const ordered=i&&(p.madeToOrder||isOrderItem(i));
+        return i?{...p,stock:ordered?(Number(p.stock)||0):Math.max(0,(Number(p.stock)||0)-i.qty),lastSaleAt:now,pendingOrderQty:ordered?(Number(p.pendingOrderQty)||0)+i.qty:(Number(p.pendingOrderQty)||0)}:p;
       });
-      const nextMov=[...cart.map(i=>({id:uid('mov'),type:'out',product:i.name,productId:i.productId,qty:i.qty,at:now,origin:`Caixa · Venda #${id} · ${seller}`})),...currentMov];
+      const nextMov=[...cart.filter(i=>!isOrderItem(i)&&!products.find(p=>String(p.id)===String(i.productId))?.madeToOrder).map(i=>({id:uid('mov'),type:'out',product:i.name,productId:i.productId,qty:i.qty,at:now,origin:`Caixa · Venda #${id} · ${seller}`})),...currentMov];
       const entries=normalizedPayments.flatMap(p=>{const cardCredit=p.type==='Cartão de crédito',cardDebit=p.type==='Cartão de débito',creditPlan=p.type==='Crediário';const count=(cardCredit||creditPlan)?Math.max(1,Number(p.installments)||1):1;const base=Math.floor((p.amount/count)*100)/100;const feeBase=Math.floor(((Number(p.fee)||0)/count)*100)/100;return Array.from({length:count},(_,idx)=>{const d=new Date(`${isoToday()}T12:00:00`);if(cardCredit||creditPlan)d.setMonth(d.getMonth()+idx+1);else if(cardDebit)d.setDate(d.getDate()+1);const amount=idx===count-1?Number((p.amount-base*(count-1)).toFixed(2)):Number(base.toFixed(2));const feePart=idx===count-1?Number(((Number(p.fee)||0)-feeBase*(count-1)).toFixed(2)):Number(feeBase.toFixed(2));const delayed=cardCredit||cardDebit||creditPlan;const due=new Intl.DateTimeFormat('en-CA',{timeZone:BRAZIL_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);return{id:uid('fin'),type:'receive',client:c,desc:`Caixa · Venda #${id} - ${c}${count>1?` · ${p.type} ${idx+1}/${count}`:normalizedPayments.length>1?` · ${p.type}`:''}`,amount,due,status:delayed?'open':immediate.includes(p.type)?'paid':'open',paidAmount:delayed?0:immediate.includes(p.type)?amount:0,paidAt:delayed?null:immediate.includes(p.type)?now:null,category:'Vendas',costCenter:'Comercial',origin:`cash-sale:${id}`,sourceType:'sale',sourceId:id,payment:p.type,paymentFee:feePart,netAmount:Number((amount-feePart).toFixed(2)),expectedAt:delayed?new Date(`${due}T12:00:00`).toISOString():p.expectedAt||null,acquirer:p.acquirer||'',nsu:p.nsu||'',installment:idx+1,installments:count}})});
       const nextFinance=[...entries,...currentFinance];
       const nextClients=c!=='Consumidor final'?clients.map(x=>x.name===c?{...x,total:(Number(x.total)||0)+total,credit:Math.max(0,(Number(x.credit)||0)-storeCreditPart),lastPurchaseAt:now}:x):clients;
@@ -468,8 +476,8 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
           <div className="pdv-categories">{categories.map(c=><button key={c} className={category===c?'active':''} onClick={()=>setCategory(c)}>{c}</button>)}</div>
         </div>
         <div className="panel pdv-products-panel">
-          <div className="pdv-section-head"><div><b>Produtos</b><small>{filtered.length} resultado(s)</small></div><span>Itens sem preço ou estoque conferido ficam bloqueados para venda</span></div>
-          <div className="pdv-product-list">{filtered.map(p=>{const available=availableFor(p),low=available<=Number(p.minStock||0);return <button className="pdv-product-row" key={p.id} onClick={()=>add(p)} disabled={!session||!canSell(p)}><span className="pdv-product-code">{(p.name||'P').slice(0,2).toUpperCase()}</span><span className="pdv-product-main"><b>{p.name}</b><small>{p.sku} · {[p.variant,p.color,p.category||'Sem categoria'].filter(Boolean).join(' · ')}</small></span><span className={`pdv-stock ${low?'low':''}`}><small>{p.inventoryPending?'Conferência':p.madeToOrder?'Encomenda':'Disponível'}</small><b>{p.inventoryPending?'Pendente':p.madeToOrder?'Sob pedido':`${available} ${p.unit||'UN'}`}</b></span><strong>{Number(p.price)>0?money(p.price):'Preço pendente'}</strong><Plus size={17}/></button>})}{!filtered.length&&<div className="cash-empty"><Search size={28}/><b>Nenhum produto encontrado</b><span>Revise a busca ou escolha outra categoria.</span></div>}</div>
+          <div className="pdv-section-head"><div><b>Produtos</b><small>{filtered.length} resultado(s)</small></div><span>Toque no produto para vender ou solicitar sob encomenda</span></div>
+          <div className="pdv-product-list">{filtered.map(p=>{const available=availableFor(p),low=available<=Number(p.minStock||0);return <button className="pdv-product-row" key={p.id} onClick={()=>add(p)} disabled={!session}><span className="pdv-product-code">{(p.name||'P').slice(0,2).toUpperCase()}</span><span className="pdv-product-main"><b>{p.name}</b><small>{p.sku} · {[p.variant,p.color,p.category||'Sem categoria'].filter(Boolean).join(' · ')}</small></span><span className={`pdv-stock ${low?'low':''}`}><small>{p.madeToOrder||orderNeeded(p)?'Sob encomenda':'Disponível'}</small><b>{p.inventoryPending?'Conferir estoque':p.madeToOrder||available<=0?'Consultar pedido':`${available} ${p.unit||'UN'}`}</b></span><strong>{Number(p.price)>0?money(p.price):'Preço pendente'}</strong><Plus size={17}/></button>})}{!filtered.length&&<div className="cash-empty"><Search size={28}/><b>Nenhum produto encontrado</b><span>Revise a busca ou escolha outra categoria.</span></div>}</div>
         </div>
       </div>
 
