@@ -160,12 +160,13 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   },[cart,total,session]);
 
   const availableFor=p=>Math.max(0,(Number(p?.stock)||0)-(Number(p?.reserved)||0));
-  const orderNeeded=p=>p?.inventoryPending===true||(!p?.madeToOrder&&availableFor(p)<=0);
+  const orderNeeded=p=>p?.inventoryPending===true&&availableFor(p)>0&&!p?.madeToOrder;
   const isOrderItem=i=>Boolean(i?.pendingOrder);
 
   const add=(p,confirmedOrder=false)=>{
     if(!session)return toast('Abra o caixa antes de iniciar uma venda.','warning','Caixa fechado');
     if(p.active===false)return toast('Este produto está arquivado.','warning','Produto indisponível');
+    if(availableFor(p)<=0&&!p.madeToOrder)return toast('Produto sem estoque disponível.','warning','Estoque');
     if(!(Number(p.price)>0))return toast('Este produto ainda não tem preço. Cadastre o preço em Produtos e Estoque antes de vender.','warning','Preço pendente');
     const order=confirmedOrder||Boolean(p.madeToOrder);
     if(orderNeeded(p)&&!order){setOrderTarget(p);return}
@@ -477,7 +478,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
         </div>
         <div className="panel pdv-products-panel">
           <div className="pdv-section-head"><div><b>Produtos</b><small>{filtered.length} resultado(s)</small></div><span>Toque no produto para vender ou solicitar sob encomenda</span></div>
-          <div className="pdv-product-list">{filtered.map(p=>{const available=availableFor(p),low=available<=Number(p.minStock||0);return <button className="pdv-product-row" key={p.id} onClick={()=>add(p)} disabled={!session}><span className="pdv-product-code">{(p.name||'P').slice(0,2).toUpperCase()}</span><span className="pdv-product-main"><b>{p.name}</b><small>{p.sku} · {[p.variant,p.color,p.category||'Sem categoria'].filter(Boolean).join(' · ')}</small></span><span className={`pdv-stock ${low?'low':''}`}><small>{p.madeToOrder||orderNeeded(p)?'Sob encomenda':'Disponível'}</small><b>{p.inventoryPending?'Conferir estoque':p.madeToOrder||available<=0?'Consultar pedido':`${available} ${p.unit||'UN'}`}</b></span><strong>{Number(p.price)>0?money(p.price):'Preço pendente'}</strong><Plus size={17}/></button>})}{!filtered.length&&<div className="cash-empty"><Search size={28}/><b>Nenhum produto encontrado</b><span>Revise a busca ou escolha outra categoria.</span></div>}</div>
+          <div className="pdv-product-list">{filtered.map(p=>{const available=availableFor(p),low=available<=Number(p.minStock||0);return <button className="pdv-product-row" key={p.id} onClick={()=>add(p)} disabled={!session||(available<=0&&!p.madeToOrder)}><span className="pdv-product-code">{(p.name||'P').slice(0,2).toUpperCase()}</span><span className="pdv-product-main"><b>{p.name}</b><small>{p.sku} · {[p.variant,p.color,p.category||'Sem categoria'].filter(Boolean).join(' · ')}</small></span><span className={`pdv-stock ${low?'low':''}`}><small>{available<=0&&!p.madeToOrder?'Sem estoque':p.madeToOrder||orderNeeded(p)?'Sob encomenda':'Disponível'}</small><b>{available<=0&&!p.madeToOrder?'Indisponível':p.inventoryPending?'Conferir estoque':p.madeToOrder?'Sob pedido':`${available} ${p.unit||'UN'}`}</b></span><strong>{Number(p.price)>0?money(p.price):'Preço pendente'}</strong><Plus size={17}/></button>})}{!filtered.length&&<div className="cash-empty"><Search size={28}/><b>Nenhum produto encontrado</b><span>Revise a busca ou escolha outra categoria.</span></div>}</div>
         </div>
       </div>
 
