@@ -1068,3 +1068,13 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 @media(max-width:600px){.lux-inventory-hub-tabs{padding:6px;gap:5px}.lux-inventory-hub-tabs button{flex:1;justify-content:center;padding:8px;font-size:11px}}
 /* Bloqueia o fade automático enquanto a sessão e o banco estão carregando antes do login. */
 .app-loading-persist{animation:none!important;opacity:1!important;visibility:visible!important;pointer-events:auto}
+
+
+/* PDV: produtos clicáveis, confirmação de encomenda e identificação no carrinho */
+.lux-pdv-order-confirm{display:flex;flex-direction:column;gap:12px}
+.lux-pdv-order-confirm p{font-size:13px;line-height:1.55;color:#50647b;margin:0}
+.lux-pdv-order-confirm p b{color:#1b3b63}
+.lux-pdv-order-confirm .pdv-open-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;margin-top:8px}
+.lux-pdv-order-confirm .pdv-open-actions button{display:inline-flex;align-items:center;gap:7px;min-height:39px}
+.lux-pdv-order-chip{display:inline-flex;align-items:center;white-space:nowrap;margin-left:5px;padding:2px 6px;border:1px solid #c8d8e9;background:#edf4fb;border-radius:4px;color:#1d4c7f;font-weight:650;font-size:10px}
+.pdv-product-row:not(:disabled){opacity:1;cursor:pointer}
