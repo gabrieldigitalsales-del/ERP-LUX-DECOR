@@ -42,7 +42,6 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const[session,setSession]=useLocal(STORAGE_KEYS.cashSession,null);
   const[cashLog,setCashLog]=useLocal(STORAGE_KEYS.cashLog,[]);
   const[held,setHeld]=useLocal(STORAGE_KEYS.held,[]);
-  const[quotations,setQuotations]=useLocal(STORAGE_KEYS.quotations,[]);
 
   const[q,setQ]=useState('');
   const[orderTarget,setOrderTarget]=useState(null);
@@ -168,7 +167,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(!session)return toast('Abra o caixa antes de iniciar uma venda.','warning','Caixa fechado');
     if(p.active===false)return toast('Este produto está arquivado.','warning','Produto indisponível');
     if(availableFor(p)<=0&&!p.madeToOrder)return toast('Produto sem estoque disponível.','warning','Estoque');
-    // Itens sem preço podem entrar na cotação, mas não poderão concluir uma venda.
+    // Itens sem preço podem ser selecionados, com valor informado na etapa de pagamento.
     const order=confirmedOrder||Boolean(p.madeToOrder);
     if(orderNeeded(p)&&!order){setOrderTarget(p);return}
     const available=availableFor(p);
@@ -229,35 +228,6 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     setClient('Consumidor final');setSeller('');setNotes('');setPaymentRows([{type:'Dinheiro',amount:'',acquirer:'',nsu:'',installments:1}]);setCashReceived('');setDeliveryRequired(false);
   };
 
-  const saveQuotation=async()=>{
-    if(!session)return toast('Abra o caixa antes de preparar uma cotação.','warning','Caixa');
-    if(!cart.length)return toast('Inclua ao menos um produto na cotação.','warning','Cotação');
-    const quote={id:uid('quote'),items:cart.map(i=>({...i,pricePending:!(Number(i.price)>0)})),client,seller,operator,notes,discountType,discountInput,totalKnown:total,hasPendingPrice:cart.some(i=>!(Number(i.price)>0)),createdAt:new Date().toISOString(),status:'Cotação'};
-    const next=[quote,...quotations];
-    const tx=await commitLocalTransaction('save-quotation',{[STORAGE_KEYS.quotations]:next});
-    if(!tx.ok)return toast('Não foi possível salvar a cotação no Supabase.','warning','Cotação');
-    setQuotations(next);resetSale();setTab('quotes');
-    addAudit('Cotação salva','Caixa',`#${quote.id} · ${quote.items.length} produto(s)`);
-    toast('Cotação salva sem movimentar estoque, caixa ou financeiro.','success','Cotação');
-  };
-  const resumeQuotation=quote=>{
-    setCart((quote.items||[]).map(i=>{
-      const product=products.find(p=>String(p.id)===String(i.productId));
-      const currentPrice=Number(product?.price)||0;
-      const price=Number(i.price)>0?Number(i.price):currentPrice;
-      return{...i,price,pricePending:!(price>0)};
-    }));
-    setClient(quote.client||'Consumidor final');setSeller(quote.seller||'');
-    setNotes(quote.notes||'');setDiscountType(quote.discountType||'value');
-    setDiscountInput(quote.discountInput||0);setTab('sale');
-    toast('Cotação carregada. Confira preços e estoque antes de vender.','info','Cotação');
-  };
-  const deleteQuotation=async id=>{
-    const next=quotations.filter(x=>x.id!==id);
-    const tx=await commitLocalTransaction('delete-quotation',{[STORAGE_KEYS.quotations]:next});
-    if(!tx.ok)return toast('Não foi possível excluir a cotação.','warning','Cotação');
-    setQuotations(next);toast('Cotação removida.','success','Cotação');
-  };
   const holdSale=async ()=>{
     if(!cart.length)return;
     const h={id:newId(),cart,client,discountType,discountInput,discount,total,notes,createdAt:new Date().toISOString(),seller,operator,sessionCode:session?.sessionCode};
@@ -296,12 +266,28 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(!session)return toast('Abra o caixa antes de vender.','warning','Caixa fechado');
     if(!cart.length)return toast('Adicione ao menos um produto.','warning','Venda');
     if(!seller)return toast('Selecione a vendedora responsável por esta venda.','warning','Vendedora');
-    if(cart.some(i=>!(Number(i.price)>0)))return toast('Há itens com preço pendente. Salve como cotação ou defina os preços antes de vender.','warning','Preço pendente');
     if(discountPct>sellerLimit+.001&&!checkManagerPin(managerPinValue))return toast(`Desconto acima de ${sellerLimit.toFixed(1)}% exige PIN gerencial.`,`warning`,'Desconto');
     if(discountPct>=reasonThreshold&&!discountReason.trim())return toast(`Informe a justificativa do desconto.`,`warning`,'Desconto');
-    if(total<=0)return toast('O total da venda precisa ser maior que zero.','warning','Venda');
+    if(total<=0&&!cart.some(i=>!(Number(i.price)>0)))return toast('O total da venda precisa ser maior que zero.','warning','Venda');
     const type=typeof preferredPayment==='string'&&paymentOptions.includes(preferredPayment)?preferredPayment:'Dinheiro';
-    setPaymentRows([{type,amount:total.toFixed(2),acquirer:'',nsu:'',installments:1}]);setCashReceived(type==='Dinheiro'?total.toFixed(2):'');setCheckoutOpen(true);
+    const initialAmount=cart.some(i=>!(Number(i.price)>0))?'':total.toFixed(2);
+    setPaymentRows([{type,amount:initialAmount,acquirer:'',nsu:'',installments:1}]);setCashReceived(type==='Dinheiro'?initialAmount:'');setCheckoutOpen(true);
+  };
+
+  // O preço definido aqui vale apenas para esta venda; não altera o cadastro mestre.
+  const setLinePrice=(id,raw)=>{
+    const parsed=Number(String(raw).replace(',','.'));
+    const price=Number.isFinite(parsed)&&parsed>0?Math.round(parsed*100)/100:0;
+    const nextCart=cart.map(i=>String(i.productId)===String(id)?{...i,price,pricePending:!(price>0),manualPrice:true}:i);
+    setCart(nextCart);
+    const unfinished=nextCart.some(i=>!(Number(i.price)>0));
+    const nextGross=nextCart.reduce((sum,i)=>sum+(Number(i.price)||0)*(Number(i.qty)||0),0);
+    const nextDiscount=discountType==='percent'?Math.min(nextGross,nextGross*Math.max(0,Math.min(100,Number(discountInput)||0))/100):Math.min(nextGross,Math.max(0,Number(discountInput)||0));
+    const nextTotal=Math.max(0,nextGross-nextDiscount);
+    const amount=unfinished?'':nextTotal.toFixed(2);
+    // Reajuste automático só quando há uma forma de pagamento; pagamentos mistos seguem editáveis.
+    setPaymentRows(prev=>prev.length===1?[{...prev[0],amount}]:prev);
+    if(paymentRows.length===1&&paymentRows[0]?.type==='Dinheiro')setCashReceived(amount);
   };
 
   const paymentTotal=paymentRows.reduce((s,x)=>s+(Number(x.amount)||0),0);
@@ -328,7 +314,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(!seller)return toast('Selecione a vendedora responsável por esta venda.','warning','Vendedora');
 
     const invalidPrice=cart.find(i=>!(Number(i.price)>0));
-    if(invalidPrice)return toast(`Defina o preço de ${invalidPrice.name} antes de concluir a venda.`,'warning','Preço pendente');
+    if(invalidPrice)return toast(`Informe o preço de ${invalidPrice.name} na tela de pagamento antes de concluir a venda.`,'warning','Preço pendente');
     const lacking=cart.find(i=>{
       const p=products.find(x=>String(x.id)===String(i.productId));
       return !p||p.active===false||(!(p.madeToOrder||isOrderItem(i))&&(p.inventoryPending||availableFor(p)<i.qty));
@@ -495,7 +481,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     <div className="pdv-toolbar">
       <div className="cash-tabs pdv-tabs">
         <button className={tab==='sale'?'active':''} onClick={()=>setTab('sale')}><ShoppingBag size={16}/>Venda</button>
-        <button className={tab==='held'?'active':''} onClick={()=>setTab('held')}><PauseCircle size={16}/>Suspensas <em>{held.length}</em></button><button className={tab==='quotes'?'active':''} onClick={()=>setTab('quotes')}><ReceiptText size={16}/>Cotações <em>{quotations.length}</em></button>
+        <button className={tab==='held'?'active':''} onClick={()=>setTab('held')}><PauseCircle size={16}/>Suspensas <em>{held.length}</em></button>
         <button className={tab==='history'?'active':''} onClick={()=>setTab('history')}><History size={16}/>Histórico</button>
       </div>
       <div className="pdv-shortcuts"><span><kbd>F4</kbd> Buscar</span><span><kbd>F6</kbd> Cliente</span><span><kbd>F8</kbd> Pagamento</span><span><kbd>F9</kbd> Suspender</span></div>
@@ -524,22 +510,12 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
           <div className="pdv-discount-row"><div className="pdv-discount-switch"><button className={discountType==='value'?'active':''} onClick={()=>setDiscountType('value')}><Tag size={14}/>R$</button><button className={discountType==='percent'?'active':''} onClick={()=>setDiscountType('percent')}><Percent size={14}/>%</button></div><label><span>Desconto</span><input type="number" min="0" max={discountType==='percent'?100:gross} value={discountInput} onChange={e=>setDiscountInput(e.target.value)}/></label></div>{discountPct>=reasonThreshold&&<label className="pdv-inline-field"><span>Justificativa do desconto *</span><input value={discountReason} onChange={e=>setDiscountReason(e.target.value)} placeholder="Motivo do desconto"/></label>}{discountPct>sellerLimit&&<label className="pdv-inline-field"><span>PIN gerencial · acima de {sellerLimit.toFixed(1)}%</span><input type="password" inputMode="numeric" value={managerPinValue} onChange={e=>setManagerPinValue(e.target.value.replace(/\D/g,''))}/></label>}<label className="pdv-delivery-check"><input type="checkbox" checked={deliveryRequired} onChange={e=>setDeliveryRequired(e.target.checked)}/>Gerar ordem de entrega automaticamente</label>
         </div>
 
-        <div className="pdv-total-box">{cart.some(i=>!(Number(i.price)>0))&&<p className="lux-pdv-quote-pending">Cotação com preço pendente: total parcial, não válido para pagamento.</p>}<div><span>Subtotal</span><b>{money(gross)}</b></div><div className="discount"><span>Desconto</span><b>- {money(discount)}</b></div><div className="grand"><span>TOTAL</span><b>{money(total)}</b></div></div>
-        <div className="pdv-quick-pay"><span>Receber com um clique</span><div><button onClick={()=>openCheckout('Pix')} disabled={!session||!cart.length||cart.some(i=>!(Number(i.price)>0))}><ScanLine size={15}/>Pix</button><button onClick={()=>openCheckout('Dinheiro')} disabled={!session||!cart.length||cart.some(i=>!(Number(i.price)>0))}><Banknote size={15}/>Dinheiro</button><button onClick={()=>openCheckout('Cartão de crédito')} disabled={!session||!cart.length||cart.some(i=>!(Number(i.price)>0))}><CreditCard size={15}/>Crédito</button><button onClick={()=>openCheckout('Cartão de débito')} disabled={!session||!cart.length||cart.some(i=>!(Number(i.price)>0))}><CreditCard size={15}/>Débito</button></div></div>
-        <button type="button" className="lux-pdv-quote-save" disabled={!session||!cart.length} onClick={saveQuotation}><ReceiptText size={17}/>Salvar cotação</button>
+        <div className="pdv-total-box">{cart.some(i=>!(Number(i.price)>0))&&<p className="lux-pdv-quote-pending">Produto com preço pendente: informe o valor na próxima etapa para concluir.</p>}<div><span>Subtotal</span><b>{money(gross)}</b></div><div className="discount"><span>Desconto</span><b>- {money(discount)}</b></div><div className="grand"><span>TOTAL</span><b>{money(total)}</b></div></div>
+        <div className="pdv-quick-pay"><span>Receber com um clique</span><div><button onClick={()=>openCheckout('Pix')} disabled={!session||!cart.length}><ScanLine size={15}/>Pix</button><button onClick={()=>openCheckout('Dinheiro')} disabled={!session||!cart.length||cart.some(i=>!(Number(i.price)>0))}><Banknote size={15}/>Dinheiro</button><button onClick={()=>openCheckout('Cartão de crédito')} disabled={!session||!cart.length||cart.some(i=>!(Number(i.price)>0))}><CreditCard size={15}/>Crédito</button><button onClick={()=>openCheckout('Cartão de débito')} disabled={!session||!cart.length||cart.some(i=>!(Number(i.price)>0))}><CreditCard size={15}/>Débito</button></div></div>
         <button className="pdv-pay-button" onClick={()=>openCheckout()} disabled={!session||!cart.length||cart.some(i=>!(Number(i.price)>0))}><WalletCards size={20}/><span>IR PARA PAGAMENTO<small>F8</small></span><ChevronRight size={20}/></button>
       </div>
     </div>}
 
-    {tab==='quotes'&&<div className="panel pdv-table-panel"><div className="pdv-section-head"><div><b>Cotações salvas</b><small>Itens com preço pendente não geram venda e não alteram o estoque.</small></div></div>
-      <div className="pdv-held-list">{quotations.map(quote=><div className="pdv-held-row" key={quote.id}>
-        <span><small>Data</small><b>{new Date(quote.createdAt).toLocaleString('pt-BR')}</b></span>
-        <span><small>Cliente</small><b>{quote.client||'Consumidor final'}</b></span>
-        <span><small>Itens</small><b>{(quote.items||[]).reduce((a,i)=>a+(Number(i.qty)||0),0)}</b></span>
-        <span><small>Valor</small><b>{quote.hasPendingPrice?'A definir':money(quote.totalKnown)}</b></span>
-        <div><button type="button" className="primary" onClick={()=>resumeQuotation(quote)}><PlayCircle size={14}/>Retomar</button><button type="button" className="secondary" onClick={()=>deleteQuotation(quote.id)} title="Excluir cotação"><Trash2 size={14}/></button></div>
-      </div>)}{!quotations.length&&<p className="empty">Nenhuma cotação salva.</p>}</div>
-    </div>}
     {tab==='held'&&<div className="panel pdv-table-panel"><div className="pdv-section-head"><div><b>Vendas suspensas</b><small>Retome sem perder os itens.</small></div></div><div className="pdv-held-list">{held.map(h=><div className="pdv-held-row" key={h.id}><span><small>Horário</small><b>{new Date(h.createdAt).toLocaleString('pt-BR')}</b></span><span><small>Cliente</small><b>{h.client}</b></span><span><small>Vendedora</small><b>{h.seller||'—'}</b></span><span><small>Itens</small><b>{(h.cart||[]).reduce((s,x)=>s+x.qty,0)}</b></span><span><small>Total</small><b>{money(h.total)}</b></span><div><button className="primary" onClick={()=>resume(h)}><PlayCircle size={14}/>Retomar</button><button className="secondary" onClick={()=>deleteHeld(h.id)}><Trash2 size={14}/></button></div></div>)}{!held.length&&<p className="empty">Nenhuma venda suspensa.</p>}</div></div>}
 
     {tab==='history'&&<div className="pdv-history-grid">
@@ -580,6 +556,16 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     {checkoutOpen&&<Modal size="large" title="Finalizar venda" subtitle={`${seller||'Sem vendedora'} · ${client||'Consumidor final'} · ${money(total)}`} onClose={()=>!finalizing&&setCheckoutOpen(false)} preventBackdropClose={finalizing}>
       <div className="pdv-checkout pdv-checkout-v2171">
         <div className="pdv-payment-side">
+          {cart.some(i=>i.manualPrice||i.pricePending||!(Number(i.price)>0))&&
+            <div className="lux-pdv-price-panel">
+              <div><b>Valores dos produtos</b><small>Confira os valores antes de finalizar. Os preços informados aqui valem somente para esta venda.</small></div>
+              {cart.filter(i=>i.manualPrice||i.pricePending||!(Number(i.price)>0)).map(i=>
+                <label className="lux-pdv-price-line" key={i.productId}>
+                  <span><b>{i.name}</b><small>{i.qty} unidade(s) · {i.sku}</small></span>
+                  <span className="lux-pdv-price-control"><small>Preço unitário (R$)</small><input type="number" min="0.01" step="0.01" inputMode="decimal" aria-label={`Preço unitário de ${i.name}`} placeholder="Informe o preço" value={i.price>0?i.price:''} onChange={e=>setLinePrice(i.productId,e.target.value)}/></span>
+                </label>)}
+              {cart.some(i=>!(Number(i.price)>0))&&<p>Informe os preços pendentes para habilitar a finalização da venda.</p>}
+            </div>}
           <div className="pdv-checkout-context"><span><small>Vendedora</small><b>{seller||'—'}</b></span><span><small>Cliente</small><b>{client||'Consumidor final'}</b></span><span><small>Operador</small><b>{operator||'—'}</b></span><span><small>Recebimento</small><b>{deliveryRequired?'Entrega':'Retirada'}</b></span></div>
           <h4>Forma de pagamento</h4>
           <div className="pdv-payment-methods">{paymentOptions.map(type=>{const Icon=paymentIcon[type]||WalletCards;const selected=paymentRows.length===1&&paymentRows[0].type===type;return <button className={selected?'active':''} key={type} onClick={()=>chooseSinglePayment(type)}><Icon size={19}/><span>{type}</span></button>})}</div>
@@ -599,7 +585,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
           <div className="pdv-summary-payments">{paymentRows.map((p,i)=>{const preview=paymentPreview(p);return <div key={`${p.type}-${i}`}><span>{p.type}{p.type==='Cartão de crédito'?` · ${preview.installments}x`:''}</span><b>{money(preview.amount)}</b>{p.type==='Cartão de crédito'&&<small>{preview.installments}x de {money(preview.installmentValue)} · líquido {money(preview.net)}</small>}</div>})}</div>
           <span className={Math.abs(paymentTotal-total)<.01?'ok-line':'warn-line'}>Pagamentos <b>{money(paymentTotal)}</b></span>{remaining>0&&<span className="warn-line">Falta pagar <b>{money(remaining)}</b></span>}{paymentTotal>total+.01&&<span className="warn-line">Excedente <b>{money(paymentTotal-total)}</b></span>}{cashPart>0&&<span>Troco <b>{money(change)}</b></span>}
           <div className="pdv-checkout-protection"><ShieldCheck size={19}/><div><b>Operação protegida</b><small>Os registros são gravados neste navegador. Confira o pagamento e o estoque antes de confirmar.</small></div></div>
-          <div className="pdv-checkout-actions"><button className="secondary" onClick={()=>setCheckoutOpen(false)} disabled={finalizing}>Voltar para venda</button><button className="pdv-confirm-sale" onClick={finalize} disabled={finalizing||Math.abs(paymentTotal-total)>.01}>{finalizing?'PROCESSANDO...':'FINALIZAR VENDA'}</button></div>
+          <div className="pdv-checkout-actions"><button className="secondary" onClick={()=>setCheckoutOpen(false)} disabled={finalizing}>Voltar para venda</button><button className="pdv-confirm-sale" onClick={finalize} disabled={finalizing||total<=0||cart.some(i=>!(Number(i.price)>0))||Math.abs(paymentTotal-total)>.01}>{finalizing?'PROCESSANDO...':'FINALIZAR VENDA'}</button></div>
         </div>
       </div>
     </Modal>}
