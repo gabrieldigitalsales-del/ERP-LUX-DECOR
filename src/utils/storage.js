@@ -219,7 +219,7 @@ export function storageHealth(){
   return{keys,bytes,corrupt,version:localStorage.getItem(VERSION_KEY)||'legacy'};
 }
 export const STORAGE_KEYS={
-  products:'luxdecor-products-v12',clients:'luxdecor-clients-v12',suppliers:'luxdecor-suppliers-v12',finance:'luxdecor-finance-v12',sales:'luxdecor-sales-v12',purchases:'luxdecor-purchases-v12',movements:'luxdecor-stock-log-v16',invoices:'luxdecor-nf-docs-v16',cashLog:'luxdecor-cash-log-v23',cashSession:'luxdecor-cash-session-v23',held:'luxdecor-cash-held-v23',orders:'luxdecor-orders-v217'
+  products:'luxdecor-products-v12',clients:'luxdecor-clients-v12',suppliers:'luxdecor-suppliers-v12',finance:'luxdecor-finance-v12',sales:'luxdecor-sales-v12',purchases:'luxdecor-purchases-v12',movements:'luxdecor-stock-log-v16',invoices:'luxdecor-nf-docs-v16',cashLog:'luxdecor-cash-log-v23',cashSession:'luxdecor-cash-session-v23',held:'luxdecor-cash-held-v23',quotations:'luxdecor-quotations-v1',orders:'luxdecor-orders-v217'
 };
 export async function commitLocalTransaction(label,changes={}){
   if(cloudConfigured()){
