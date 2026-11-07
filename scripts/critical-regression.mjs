@@ -119,5 +119,8 @@ assert.ok(pdvFinal.includes("if(availableFor(p)<=0&&!p.madeToOrder)return toast"
 assert.ok(!pdvFinal.includes('pdv-quick-pay')&&!pdvFinal.includes('pdv-payment-methods'),'Não pode haver dois seletores de pagamento');
 assert.ok(pdvFinal.includes('PAGAMENTO<small>F8')&&pdvFinal.includes('onClick={()=>openCheckout()}'),'Deve existir um único botão Pagamento no PDV');
 assert.ok(pdvFinal.includes('<b>Forma de pagamento</b>')&&pdvFinal.includes('paymentRows.map((p,i)'), 'A forma e o valor de pagamento devem ser preenchidos em um único modal');
+const stockScreen=read('src/pages/Stock.jsx');
+assert.ok(!stockScreen.includes('lux-stock-import-bar')&&!stockScreen.includes('importInventory')&&!stockScreen.includes('importConfirm'),'A faixa e o importador legado de 54 cadastros não devem aparecer no estoque');
+assert.ok(read('src/pages/InventoryHub.jsx').includes('<Stock embedded')&&read('src/pages/InventoryHub.jsx').includes('<Products embedded'),'Catálogo e estoque compartilham a mesma lista de produtos');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
