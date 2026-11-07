@@ -1,6 +1,7 @@
 import React,{useEffect,useState}from'react';
 import App from'./App';
 import CloudLogin from'./components/CloudLogin';
+import LoadingScreen from'./components/LoadingScreen';
 import{cloudConfigured,restoreCloudSession,signOutCloud,getCloudSession}from'./utils/cloudAuth';
 import{loadCloudDocuments,clearCloudDocuments,erpCloudStorage,importLegacyDocuments,availableLegacyKeys,commitCloudDocuments,cloudError,flushCloudWrites}from'./services/cloudStore';
 import{seedProducts,seedSuppliers}from'./data/seed';
@@ -10,6 +11,8 @@ import{listLegacyLocalAttachments,listAttachments,putAttachment}from'./utils/att
 export default function CloudGate(){
  const[stage,setStage]=useState('checking'),[session,setSession]=useState(null),
  [error,setError]=useState(''),[legacyKeys,setLegacyKeys]=useState([]),[legacyFiles,setLegacyFiles]=useState([]),[busy,setBusy]=useState(false);
+ const[intro,setIntro]=useState(true);
+ useEffect(()=>{const timer=setTimeout(()=>setIntro(false),1550);return()=>clearTimeout(timer)},[]);
  const init=async s=>{
   setSession(s);
   if(!s?.member){setStage('login');return}
@@ -71,6 +74,7 @@ export default function CloudGate(){
   return()=>{clearInterval(timer);window.removeEventListener('focus',refresh)}
  },[stage]);
  const logout=async()=>{await signOutCloud();clearCloudDocuments();setSession(null);setStage('login')};
+ if(intro||stage==='checking'||stage==='loading')return <LoadingScreen/>;
  if(stage==='ready'&&session?.member)return <App cloudSession={session} onCloudLogout={logout}/>;
  if(stage==='login')return <CloudLogin onAuthenticated={init}/>;
  return <div className="erp-cloud-gate">
