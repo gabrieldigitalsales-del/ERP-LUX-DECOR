@@ -101,9 +101,10 @@ assert.ok(!fs.existsSync(path.join(root,'src/services/ncmService.js')),'Serviço
 assert.ok(!fs.existsSync(path.join(root,'src/data/ncmTable.json')),'Tabela NCM legada não deve carregar no ERP');
 const pdvSource=read('src/pages/Cashier.jsx');
 assert.ok(pdvSource.includes("normalize('NFD')")&&pdvSource.includes('terms.every(term=>searchable.includes(term))'),'PDV deve buscar sem acentos e com palavras em ordem livre');
-assert.ok(pdvSource.includes('disabled={!session}')&&!pdvSource.includes('disabled={!session||!canSell(p)}'),'Itens ativos não podem ficar transparentes por estoque ou preço');
+assert.ok(pdvSource.includes('disabled={!session||(available<=0&&!p.madeToOrder)}'),'Produtos sem estoque não devem ser clicáveis no PDV, exceto sob encomenda configurada');
 assert.ok(pdvSource.includes('orderTarget&&<Modal')&&pdvSource.includes('add(target,true)'),'Encomendas exigem confirmação antes de entrar no carrinho');
 assert.ok(pdvSource.includes('pendingOrder:order')&&pdvSource.includes("isOrderItem(i)"),'Venda sob encomenda deve ser registrada sem diminuir estoque');
+assert.ok(pdvSource.includes("if(availableFor(p)<=0&&!p.madeToOrder)return toast"),'Sem estoque também deve ser bloqueado pela função de adicionar, não apenas pelo botão');
 assert.equal('sofá retrátil'.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').includes('sofa'),true,'Sofa deve encontrar Sofá');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
