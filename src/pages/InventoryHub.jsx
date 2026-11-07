@@ -5,8 +5,8 @@ import Stock from'./Stock';
 import Products from'./Products';
 
 /** Único módulo de produtos e estoque: mesmo cadastro, quantidades e movimentações. */
-export default function InventoryHub({products,setProducts,movements,setMovements,sales,setPage}){
- const[tab,setTab]=useState('stock');
+export default function InventoryHub({products,setProducts,movements,setMovements,sales,setPage,initialTab='stock'}){
+ const[tab,setTab]=useState(initialTab);
  return <section className="lux-inventory-hub">
   <PageHeader title="Produtos e Estoque" subtitle="Cadastre os móveis, consulte quantidades e controle as entradas e saídas em um só lugar."/>
   <div className="module-tabs lux-inventory-hub-tabs" role="tablist" aria-label="Produtos e estoque">
