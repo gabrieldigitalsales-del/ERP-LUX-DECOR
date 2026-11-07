@@ -74,7 +74,7 @@ export default function CloudGate(){
   return()=>{clearInterval(timer);window.removeEventListener('focus',refresh)}
  },[stage]);
  const logout=async()=>{await signOutCloud();clearCloudDocuments();setSession(null);setStage('login')};
- if(intro||stage==='checking'||stage==='loading')return <LoadingScreen/>;
+ if(intro||stage==='checking'||stage==='loading')return <LoadingScreen persist/>;
  if(stage==='ready'&&session?.member)return <App cloudSession={session} onCloudLogout={logout}/>;
  if(stage==='login')return <CloudLogin onAuthenticated={init}/>;
  return <div className="erp-cloud-gate">
