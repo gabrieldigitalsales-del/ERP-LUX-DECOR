@@ -106,13 +106,15 @@ assert.ok(pdvSource.includes('orderTarget&&<Modal')&&pdvSource.includes('add(tar
 assert.ok(pdvSource.includes('pendingOrder:order')&&pdvSource.includes("isOrderItem(i)"),'Venda sob encomenda deve ser registrada sem diminuir estoque');
 assert.ok(pdvSource.includes("if(availableFor(p)<=0&&!p.madeToOrder)return toast"),'Sem estoque também deve ser bloqueado pela função de adicionar, não apenas pelo botão');
 assert.equal('sofá retrátil'.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').includes('sofa'),true,'Sofa deve encontrar Sofá');
-const cashierQuotation=read('src/pages/Cashier.jsx');
-assert.ok(cashierQuotation.includes('const saveQuotation=async()=>')&&cashierQuotation.includes("STORAGE_KEYS.quotations"),'Cotações devem ser salvas separadas de vendas');
-assert.ok(cashierQuotation.includes("if(cart.some(i=>!(Number(i.price)>0)))return toast"),'Pagamento deve bloquear preço pendente');
-assert.ok(cashierQuotation.includes("const invalidPrice=cart.find(i=>!(Number(i.price)>0))"),'Finalização deve bloquear itens sem preço');
-assert.ok(cashierQuotation.includes("onClick={saveQuotation}")&&cashierQuotation.includes("tab==='quotes'"),'PDV deve salvar e listar cotações');
-assert.ok(cashierQuotation.includes("return[...rows,{productId:p.id")&&cashierQuotation.includes("pricePending:!(Number(p.price)>0)"),'Produto com preço pendente deve entrar no carrinho');
-assert.ok(!cashierQuotation.includes("if(!(Number(p.price)>0))return toast('Este produto ainda não tem preço."),'Cotação não deve bloquear ao adicionar preço pendente');
-assert.ok(read('src/utils/storage.js').includes("quotations:'luxdecor-quotations-v1'"),'Chave de cotações deve existir no Supabase');
+const pdvFinal=read('src/pages/Cashier.jsx');
+assert.ok(!pdvFinal.includes('saveQuotation')&&!pdvFinal.includes("tab==='quotes'")&&!pdvFinal.includes('Salvar cotação'),'Salvar cotação e aba de cotações devem ficar fora do PDV');
+assert.ok(pdvFinal.includes('const setLinePrice=(id,raw)=>'),'PDV deve aceitar preço manual na própria venda');
+assert.ok(pdvFinal.includes('onChange={e=>setLinePrice(i.productId,e.target.value)}'),'Preço pendente deve ser editável na tela de pagamento');
+assert.ok(pdvFinal.includes('setPaymentRows(prev=>prev.length===1?'),'Pagamento simples deve acompanhar o valor informado');
+assert.ok(pdvFinal.includes("const invalidPrice=cart.find(i=>!(Number(i.price)>0))"),'Não finalizar venda com preço pendente');
+assert.ok(pdvFinal.includes('disabled={finalizing||total<=0||cart.some(i=>!(Number(i.price)>0))'),'Finalizar só fica habilitado com todos os preços definidos');
+assert.ok(pdvFinal.includes("return[...rows,{productId:p.id")&&pdvFinal.includes("pricePending:!(Number(p.price)>0)"),'Preço pendente deve entrar no carrinho sem salvar cotação');
+assert.ok(pdvFinal.includes("disabled={!session||!cart.length}")&&!pdvFinal.includes("disabled={!session||!cart.length||cart.some"),'Pagamento deve abrir mesmo com preço pendente');
+assert.ok(pdvFinal.includes("if(availableFor(p)<=0&&!p.madeToOrder)return toast"),'Produto sem estoque segue bloqueado');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
