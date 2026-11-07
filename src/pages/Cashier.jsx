@@ -301,10 +301,6 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(paymentRows.length>=4)return toast('Limite de 4 formas de pagamento por venda.','info','Pagamento');
     setPaymentRows(a=>[...a,{type:'Pix',amount:remaining?remaining.toFixed(2):'',acquirer:'',nsu:'',installments:1}]);
   };
-  const chooseSinglePayment=type=>{
-    setPaymentRows([{type,amount:total.toFixed(2),acquirer:'',nsu:'',installments:1}]);
-    if(type==='Dinheiro')setCashReceived(total.toFixed(2));
-  };
 
   const finalize=async ()=>{
     if(finalizing)return;
@@ -511,8 +507,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
         </div>
 
         <div className="pdv-total-box">{cart.some(i=>!(Number(i.price)>0))&&<p className="lux-pdv-quote-pending">Produto com preço pendente: informe o valor na próxima etapa para concluir.</p>}<div><span>Subtotal</span><b>{money(gross)}</b></div><div className="discount"><span>Desconto</span><b>- {money(discount)}</b></div><div className="grand"><span>TOTAL</span><b>{money(total)}</b></div></div>
-        <div className="pdv-quick-pay"><span>Receber com um clique</span><div><button onClick={()=>openCheckout('Pix')} disabled={!session||!cart.length}><ScanLine size={15}/>Pix</button><button onClick={()=>openCheckout('Dinheiro')} disabled={!session||!cart.length}><Banknote size={15}/>Dinheiro</button><button onClick={()=>openCheckout('Cartão de crédito')} disabled={!session||!cart.length}><CreditCard size={15}/>Crédito</button><button onClick={()=>openCheckout('Cartão de débito')} disabled={!session||!cart.length}><CreditCard size={15}/>Débito</button></div></div>
-        <button className="pdv-pay-button" onClick={()=>openCheckout()} disabled={!session||!cart.length}><WalletCards size={20}/><span>IR PARA PAGAMENTO<small>F8</small></span><ChevronRight size={20}/></button>
+        <button className="pdv-pay-button" onClick={()=>openCheckout()} disabled={!session||!cart.length}><WalletCards size={20}/><span>PAGAMENTO<small>F8</small></span><ChevronRight size={20}/></button>
       </div>
     </div>}
 
@@ -567,11 +562,9 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
               {cart.some(i=>!(Number(i.price)>0))&&<p>Informe os preços pendentes para habilitar a finalização da venda.</p>}
             </div>}
           <div className="pdv-checkout-context"><span><small>Vendedora</small><b>{seller||'—'}</b></span><span><small>Cliente</small><b>{client||'Consumidor final'}</b></span><span><small>Operador</small><b>{operator||'—'}</b></span><span><small>Recebimento</small><b>{deliveryRequired?'Entrega':'Retirada'}</b></span></div>
-          <h4>Forma de pagamento</h4>
-          <div className="pdv-payment-methods">{paymentOptions.map(type=>{const Icon=paymentIcon[type]||WalletCards;const selected=paymentRows.length===1&&paymentRows[0].type===type;return <button className={selected?'active':''} key={type} onClick={()=>chooseSinglePayment(type)}><Icon size={19}/><span>{type}</span></button>})}</div>
-          <div className="pdv-split-head"><div><b>Pagamentos da venda</b><small>Até 4 formas na mesma venda.</small></div><div><button className="secondary" onClick={()=>{setPaymentRows([{type:'Dinheiro',amount:'',acquirer:'',nsu:'',installments:1}]);setCashReceived('')}}>Limpar</button><button className="secondary" onClick={addPaymentRow} disabled={paymentRows.length>=4}><Plus size={14}/>Adicionar</button></div></div>
+          <div className="pdv-split-head"><div><b>Forma de pagamento</b><small>Escolha a forma e confira o valor. Para pagamento misto, adicione outra forma.</small></div><div><button className="secondary" onClick={()=>{setPaymentRows([{type:'Dinheiro',amount:'',acquirer:'',nsu:'',installments:1}]);setCashReceived('')}}>Limpar</button><button className="secondary" onClick={addPaymentRow} disabled={paymentRows.length>=4}><Plus size={14}/>Adicionar</button></div></div>
           <div className="pdv-payment-rows">{paymentRows.map((p,i)=>{const preview=paymentPreview(p);return <div className="pdv-payment-card" key={i}>
-            <div className="pdv-payment-card-main"><label><span>Forma</span><select value={p.type} onChange={e=>updatePayment(i,{type:e.target.value,acquirer:'',nsu:'',installments:1})}>{paymentOptions.map(x=><option key={x}>{x}</option>)}</select></label><label><span>Valor</span><input type="number" min="0" step="0.01" value={p.amount} onChange={e=>updatePayment(i,{amount:e.target.value})}/></label>{paymentRows.length>1&&<button className="pdv-payment-remove" title="Remover forma" onClick={()=>setPaymentRows(a=>a.filter((_,idx)=>idx!==i))}><Trash2 size={15}/></button>}</div>
+            <div className="pdv-payment-card-main"><label><span>Forma</span><select value={p.type} onChange={e=>{const type=e.target.value;updatePayment(i,{type,acquirer:'',nsu:'',installments:1});if(paymentRows.length===1&&type==='Dinheiro')setCashReceived(String(p.amount||total.toFixed(2)));else if(paymentRows.length===1)setCashReceived('')}}>{paymentOptions.map(x=><option key={x}>{x}</option>)}</select></label><label><span>Valor</span><input type="number" min="0" step="0.01" value={p.amount} onChange={e=>updatePayment(i,{amount:e.target.value})}/></label>{paymentRows.length>1&&<button className="pdv-payment-remove" title="Remover forma" onClick={()=>setPaymentRows(a=>a.filter((_,idx)=>idx!==i))}><Trash2 size={15}/></button>}</div>
             {(p.type==='Cartão de crédito'||p.type==='Crediário')&&<div className="pdv-payment-extra"><label><span>Parcelas</span><select value={Math.max(1,Number(p.installments)||1)} onChange={e=>updatePayment(i,{installments:Number(e.target.value)})}>{Array.from({length:p.type==='Cartão de crédito'?maxCreditInstallments:24},(_,idx)=>idx+1).map(n=><option key={n} value={n}>{n}x · {money((Number(p.amount)||0)/n)}</option>)}</select></label>{p.type==='Cartão de crédito'&&<div className="pdv-installment-preview"><b>{preview.installments}x de {money(preview.installmentValue)}</b><small>Taxa prevista {preview.feeRate.toFixed(2)}% · líquido {money(preview.net)}</small></div>}</div>}
             {p.type==='Cartão de débito'&&<div className="pdv-installment-preview single"><b>Débito · 1x</b><small>Taxa prevista {preview.feeRate.toFixed(2)}% · líquido {money(preview.net)}</small></div>}
             {(p.type==='Cartão de crédito'||p.type==='Cartão de débito')&&<div className="pdv-payment-extra"><label><span>Adquirente</span><select value={p.acquirer||''} onChange={e=>updatePayment(i,{acquirer:e.target.value})}><option value="">Não informado</option><option>Stone</option><option>Cielo</option><option>Rede</option><option>Getnet</option><option>PagBank</option><option>Mercado Pago</option><option>Outra</option></select></label><label><span>NSU</span><input value={p.nsu||''} onChange={e=>updatePayment(i,{nsu:e.target.value})} placeholder="Opcional"/></label></div>}
