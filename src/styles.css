@@ -1053,3 +1053,18 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .pdv-optional-opening{grid-column:1/-1;display:flex;flex-direction:column;gap:9px}
 .pdv-optional-opening-toggle{align-self:flex-start;padding:4px 0!important;border:0!important;background:transparent!important;color:#63758c!important;font-size:11px!important;font-weight:550!important;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .pdv-optional-opening .pdv-opening-field{margin:0}
+
+
+/* Lux Decor — unificação de Produtos e Estoque */
+.lux-inventory-hub{display:flex;flex-direction:column;gap:16px;min-width:0}
+.lux-inventory-hub-tabs{display:flex;flex-wrap:wrap;gap:8px;padding:8px;border:1px solid #e1e8f0;border-radius:8px;background:#f7f9fc}
+.lux-inventory-hub-tabs button{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:9px 15px;border-radius:6px;font-weight:650;font-size:12px;white-space:nowrap}
+.lux-inventory-hub>.page{min-width:0}
+.lux-products-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 14px}
+.lux-products-header>div{display:flex;flex-direction:column;gap:4px}
+.lux-products-header b{font-size:14px;color:#1a3555}
+.lux-products-header small{font-size:11px;color:#667d94}
+.lux-products-header button{display:inline-flex;align-items:center;gap:7px}
+@media(max-width:600px){.lux-inventory-hub-tabs{padding:6px;gap:5px}.lux-inventory-hub-tabs button{flex:1;justify-content:center;padding:8px;font-size:11px}}
+/* Bloqueia o fade automático enquanto a sessão e o banco estão carregando antes do login. */
+.app-loading-persist{animation:none!important;opacity:1!important;visibility:visible!important;pointer-events:auto}
