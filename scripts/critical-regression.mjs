@@ -142,5 +142,13 @@ for(const field of ['street','number','neighborhood','cep','complement','city','
 assert.ok(pdvAddress.includes('address:formatCustomerAddress(selectedCustomer)')&&pdvAddress.includes('clientAddressFields:customerAddressFields(selectedCustomer)'),'Entrega e pedido devem receber endereço completo e campos separados');
 const clientAddress=read('src/pages/SimpleRegistry.jsx');
 assert.ok(clientAddress.includes('lux-customer-address-fields')&&clientAddress.includes('...customerAddressFields(form)'),'Cadastro geral de clientes deve preservar campos de entrega');
+const registriesHub=read('src/pages/RegistryHub.jsx');
+const registriesSidebar=read('src/components/Sidebar.jsx');
+const registriesApp=read('src/App.jsx');
+assert.ok(registriesSidebar.includes("['registries','Cadastros'"),'Menu deve conter um único Cadastros');
+assert.ok(!registriesSidebar.includes("['clients','Clientes'")&&!registriesSidebar.includes("['suppliers','Fornecedores'")&&!registriesSidebar.includes("['salespeople','Vendedores'"),'Clientes, Fornecedores e Vendedores não devem duplicar menu');
+for(const tab of ['Clientes','Fornecedores','Vendedores'])assert.ok(registriesHub.includes('>'+tab+'</button>'),'Cadastros deve conter aba '+tab);
+assert.ok(registriesHub.includes('type="clients" items={clients}')&&registriesHub.includes('type="suppliers" items={suppliers}')&&registriesHub.includes('<Salespeople/>'),'As abas devem reaproveitar cadastros existentes');
+assert.ok(registriesApp.includes("['registries','clients','suppliers','salespeople'].includes(page)"),'Atalhos antigos devem abrir o mesmo módulo de Cadastros');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
