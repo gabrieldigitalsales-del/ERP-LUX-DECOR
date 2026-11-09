@@ -1091,3 +1091,34 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-pdv-price-control input:focus{border-color:#235f9b;outline:2px solid #235f9b26}
 .lux-pdv-price-panel p{margin:0;font-size:11px;color:#805a28;background:#fff5e4;padding:8px;border-radius:4px;line-height:1.5}
 @media(max-width:560px){.lux-pdv-price-line{align-items:stretch;flex-direction:column}.lux-pdv-price-control{width:100%;max-width:none}}
+
+
+/* Estoque Lux Decor: fábrica > modelo > módulo > cor > quantidade */
+.lux-stock-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.lux-stock-toolbar .search{min-width:min(100%,340px);flex:1}
+.lux-inventory-factory-list{display:flex;flex-direction:column;gap:22px}
+.lux-inventory-factory{border:1px solid #dee6ef;border-radius:10px;background:#fff;overflow:hidden;min-width:0}
+.lux-inventory-factory-title{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#173b6e;color:#fff;padding:17px 21px}
+.lux-inventory-factory-title small{display:block;font-size:10px;letter-spacing:1.3px;font-weight:650;color:#cad7ea;margin-bottom:5px}
+.lux-inventory-factory-title h3{margin:0;color:white;font-size:19px;letter-spacing:.2px;font-weight:750}
+.lux-inventory-factory-title>span{font-size:11px;border:1px solid #6380a6;color:#edf3fc;border-radius:5px;padding:6px 10px;white-space:nowrap}
+.lux-inventory-model{padding:18px 20px 6px;border-bottom:1px solid #e5ebf1}
+.lux-inventory-model:last-child{border-bottom:0;padding-bottom:18px}
+.lux-inventory-model-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.lux-inventory-model-title h4{margin:0;font-size:15px;font-weight:750;color:#183553}
+.lux-inventory-model-title small{color:#71829a;font-size:11px}
+.lux-inventory-model-head,.lux-inventory-variant{display:grid;grid-template-columns:minmax(112px,1.15fr) minmax(135px,1.3fr) minmax(110px,.85fr) minmax(218px,1.6fr);align-items:center;column-gap:12px}
+.lux-inventory-model-head{padding:9px 12px;background:#f2f5f9;border:1px solid #e4eaf0;border-radius:5px 5px 0 0;color:#667991;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.4px}
+.lux-inventory-variant{min-height:65px;padding:10px 12px;border:1px solid #e4eaf0;border-top:0;background:#fff}
+.lux-inventory-variant:last-child{border-radius:0 0 5px 5px}
+.lux-inventory-variant>div{min-width:0}
+.lux-inventory-variant b{font-size:12px;font-weight:700;color:#1f3959}
+.lux-inventory-variant small{display:block;font-size:10px;color:#7d8da1;line-height:1.4;margin-top:4px;overflow-wrap:anywhere}
+.lux-inventory-quantity b{color:#17613d}
+.lux-inventory-quantity b.pending{color:#966220}
+.lux-inventory-variant-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px}
+.lux-inventory-variant-actions button{display:inline-flex;align-items:center;gap:5px;min-height:31px;padding:6px 8px;border:1px solid #d8e2ed;border-radius:5px;background:#f7f9fc;color:#244a76;font-size:10.5px;font-weight:650;cursor:pointer}
+.lux-inventory-variant-actions button:hover{background:#e8f0fa;border-color:#a3bcd8}
+.lux-stock-empty{padding:28px;text-align:center;color:#6e8095}
+@media(max-width:830px){.lux-inventory-model-head{display:none}.lux-inventory-variant{grid-template-columns:1fr 1fr;gap:12px}.lux-inventory-variant-actions{grid-column:1/-1;justify-content:flex-start}.lux-inventory-model{padding:15px 14px 6px}}
+@media(max-width:520px){.lux-inventory-factory-title{padding:14px}.lux-inventory-factory-title h3{font-size:16px}.lux-inventory-model-title h4{font-size:14px}.lux-inventory-variant{padding:12px 10px;column-gap:8px}.lux-inventory-variant-actions button{flex:1;justify-content:center}}
