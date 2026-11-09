@@ -1,6 +1,40 @@
 import React,{useMemo,useState}from'react';
 import{Boxes,ArrowDownToLine,ArrowUpFromLine,History,Search,ClipboardList,AlertTriangle,PackageCheck,ArrowLeftRight,Trash2,RotateCcw,ShoppingCart,EyeOff,MapPin,RefreshCw,Store,Truck,TrendingUp,SlidersHorizontal,ChevronRight}from'lucide-react';
 import PageHeader from'../components/PageHeader';import Modal from'../components/Modal';import ConfirmDialog from'../components/ConfirmDialog';import{toast}from'../components/ToastHost';import{addAudit}from'../utils/audit';import{suggestReorder,money}from'../utils/erpEngine';import{safeRead,commitLocalTransaction,STORAGE_KEYS}from'../utils/storage';import{uid}from'../utils/ids';import{can,currentRole}from'../utils/permissions';
+const moduleLabel=p=>{
+ const raw=String(p.sizeLabel||p.variant||'').trim();
+ if(!raw||/não informado/i.test(raw))return 'Módulo não informado';
+ if(/^\d{2,3}$/.test(raw))return (Number(raw)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' m';
+ return raw;
+};
+const moduleOrder=p=>{
+ const raw=String(p.sizeLabel||p.variant||'');
+ const num=Number(raw.replace(/[^0-9,\.]/g,'').replace(',','.'));
+ return !Number.isFinite(num)||num===0?Number.MAX_SAFE_INTEGER:/^\d{2,3}$/.test(raw)?num: num*100;
+};
+const modelLabel=p=>{
+ const name=String(p.name||p.subcategory||'Produto');
+ return /Malibu \(canto\)/i.test(name)?'Sofá de canto Malibu':name;
+};
+const factoryOrder=['LUART','BOARETO','MAIS ESTOFADOS','EDN'];
+const normalizeSearch=text=>String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
+const groupInventory=items=>{
+ const byFactory=new Map();
+ [...items].sort((a,b)=>moduleOrder(a)-moduleOrder(b)||String(a.color||'').localeCompare(String(b.color||''),'pt-BR')).forEach(p=>{
+   const factory=String(p.supplier||p.brand||'OUTROS').toUpperCase();
+   const model=modelLabel(p);
+   if(!byFactory.has(factory))byFactory.set(factory,new Map());
+   const models=byFactory.get(factory);
+   if(!models.has(model))models.set(model,[]);
+   models.get(model).push(p);
+ });
+ return [...byFactory.entries()].sort(([a],[b])=>{const x=factoryOrder.indexOf(a),y=factoryOrder.indexOf(b);return (x<0?999:x)-(y<0?999:y)||a.localeCompare(b,'pt-BR')}).map(([factory,models])=>({
+   factory,
+   sections:[...models.entries()].sort(([a],[b])=>a.localeCompare(b,'pt-BR')).map(([name,rows])=>({name,rows})),
+   count:[...models.values()].reduce((n,rows)=>n+rows.length,0)
+ }));
+};
+
 export default function Stock({products,setProducts,movements=[],setMovements,sales=[],embedded=false}){
  const[tab,setTab]=useState('overview'),[modal,setModal]=useState(null),[qty,setQty]=useState(1),[q,setQ]=useState(''),[filter,setFilter]=useState('all'),[invQ,setInvQ]=useState(''),[invFilter,setInvFilter]=useState('all'),[invLocation,setInvLocation]=useState('all'),[blindInventory,setBlindInventory]=useState(true),[transfer,setTransfer]=useState(null),[transferLocation,setTransferLocation]=useState(''),[showroom,setShowroom]=useState(null);
  const[archiveTarget,setArchiveTarget]=useState(null),[actionProduct,setActionProduct]=useState(null),[statusConfirm,setStatusConfirm]=useState(null),[deleteTarget,setDeleteTarget]=useState(null),[deleteConfirmation,setDeleteConfirmation]=useState('');
@@ -52,7 +86,8 @@ export default function Stock({products,setProducts,movements=[],setMovements,sa
  const restoreProduct=p=>changeArchived(p,false);
  const active=useMemo(()=>products.filter(p=>p.active!==false),[products]);const available=p=>(Number(p.stock)||0)-(Number(p.reserved)||0);
  const locations=useMemo(()=>['all',...Array.from(new Set(active.map(p=>p.location||'Sem localização'))).sort()],[active]);
- const list=useMemo(()=>(filter==='archived'?products.filter(p=>p.active===false):active).filter(p=>`${p.name||''} ${p.sku||''} ${p.category||''} ${p.supplier||''}`.toLowerCase().includes(q.toLowerCase())).filter(p=>filter==='archived'?true:filter==='low'?available(p)<=Number(p.minStock||0):filter==='zero'?available(p)<=0:filter==='reserved'?(Number(p.reserved)||0)>0:filter==='showroom'?p.stockType==='Mostruário':filter==='order'?p.madeToOrder===true:true),[active,products,q,filter]);
+ const list=useMemo(()=>(filter==='archived'?products.filter(p=>p.active===false):active).filter(p=>normalizeSearch(`${p.name||''} ${p.sku||''} ${p.category||''} ${p.supplier||''} ${p.brand||''} ${p.variant||''} ${p.sizeLabel||''} ${moduleLabel(p)} ${p.color||''}`).includes(normalizeSearch(q))).filter(p=>filter==='archived'?true:filter==='low'?available(p)<=Number(p.minStock||0):filter==='zero'?available(p)<=0:filter==='reserved'?(Number(p.reserved)||0)>0:filter==='showroom'?p.stockType==='Mostruário':filter==='order'?p.madeToOrder===true:true),[active,products,q,filter]);
+ const groupedStock=useMemo(()=>groupInventory(list),[list]);
  const invList=useMemo(()=>active.filter(p=>`${p.name||''} ${p.sku||''} ${p.category||''} ${p.supplier||''}`.toLowerCase().includes(invQ.toLowerCase())).filter(p=>invFilter==='low'?available(p)<=Number(p.minStock||0):invFilter==='zero'?available(p)<=0:true).filter(p=>invLocation==='all'||(p.location||'Sem localização')===invLocation),[active,invQ,invFilter,invLocation]);
  const stats=useMemo(()=>({skus:active.length,physical:active.reduce((s,p)=>s+(Number(p.stock)||0),0),reserved:active.reduce((s,p)=>s+(Number(p.reserved)||0),0),low:active.filter(p=>available(p)<=Number(p.minStock||0)).length,showroom:active.filter(p=>p.stockType==='Mostruário').length,ordered:active.filter(p=>p.madeToOrder).length}),[active]);
  const suggestions=useMemo(()=>active.map(p=>({p,qty:suggestReorder(p,sales)})).filter(x=>x.qty>0).sort((a,b)=>b.qty-a.qty),[active,sales]);
@@ -87,11 +122,36 @@ export default function Stock({products,setProducts,movements=[],setMovements,sa
  return <section className="page">{!embedded&&<PageHeader title="Estoque" subtitle="Controle físico: disponível, reservado, movimentações, inventário, localização e reposição."/>}
  <div className="module-tabs stock-tabs"><button className={tab==='overview'?'active':''} onClick={()=>setTab('overview')}><Boxes size={15}/>Visão geral</button><button className={tab==='movements'?'active':''} onClick={()=>setTab('movements')}><History size={15}/>Movimentações</button><button className={tab==='inventory'?'active':''} onClick={()=>setTab('inventory')}><ClipboardList size={15}/>Inventário</button><button className={tab==='reorder'?'active':''} onClick={()=>setTab('reorder')}><ShoppingCart size={15}/>Sugestão de compra</button></div>
  <div className="stock-kpis"><div><small>SKUs ativos</small><b>{stats.skus}</b></div><div><small>Unidades físicas</small><b>{stats.physical}</b></div><div><small>Reservadas</small><b>{stats.reserved}</b></div><div className={stats.low?'warn':''}><small>Abaixo do mínimo</small><b>{stats.low}</b></div><div><small>Mostruário</small><b>{stats.showroom}</b></div><div><small>Sob encomenda</small><b>{stats.ordered}</b></div></div>
- {tab==='overview'&&<><div className="toolbar"><label className="search"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar produto, SKU, categoria ou fornecedor..."/></label><select className="period-input" value={filter} onChange={e=>setFilter(e.target.value)}><option value="all">Todos</option><option value="low">Estoque baixo</option><option value="zero">Zerados</option><option value="reserved">Com reserva</option><option value="showroom">Mostruário</option><option value="order">Sob encomenda</option><option value="archived">Arquivados</option></select><span>{list.reduce((s,p)=>s+available(p),0)} un. disponíveis</span></div><div className="list-panel stock-list"><div className="list-head stock-columns advanced-stock-v216"><span>Produto</span><span>SKU</span><span>Disponível</span><span>Reservado</span><span>Local</span><span>Reposição</span><span>Fornecedor</span><span>Ações</span></div>{list.map(p=>{const disp=available(p),reorder=suggestReorder(p,sales);return <div className="list-row stock-columns advanced-stock-v216" key={p.id}><div className="list-product"><span className="icon-chip"><Boxes size={17}/></span><div><b>{p.name}</b><small>{p.category}{p.inventoryPending?' · Quantidade a conferir':''}{p.stockType==='Mostruário'?' · Mostruário':''}{p.madeToOrder?' · Sob encomenda':''}</small></div></div><span className="mono">{p.sku}</span><span><b className={disp<=p.minStock?'danger':''}>{disp} un.</b><small>{p.inventoryPending?'Pendente de contagem':`Físico ${p.stock}`}</small></span><span>{p.reserved||0} un.</span><span>{p.location||'—'}</span><span>{reorder?<b>{reorder} un.</b>:<em className="status success">OK</em>}</span><span>{p.supplier||'—'}</span><div className="lux-stock-actions">
- {p.active!==false&&<><button type="button" className="lux-stock-action-primary" onClick={()=>chooseAction(p,'in')} title="Registrar recebimento ou reposição"><ArrowDownToLine size={14}/>Entrada</button>
- <button type="button" className="lux-stock-action-primary" onClick={()=>chooseAction(p,'out')} title="Registrar retirada, perda ou consumo"><ArrowUpFromLine size={14}/>Saída</button></>}
- <button type="button" className="lux-stock-manage-button" onClick={()=>setActionProduct(p)}><SlidersHorizontal size={14}/>{p.active===false?'Gerenciar':'Mais ações'}<ChevronRight size={13}/></button>
- </div></div>})}</div></>}
+ {tab==='overview'&&<>
+  <div className="toolbar lux-stock-toolbar">
+    <label className="search"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar modelo, fábrica, módulo, código ou cor..."/></label>
+    <select className="period-input" value={filter} onChange={e=>setFilter(e.target.value)}>
+      <option value="all">Todos</option><option value="low">Estoque baixo</option><option value="zero">Zerados</option><option value="reserved">Com reserva</option><option value="showroom">Showroom EDN</option><option value="order">Sob encomenda</option><option value="archived">Arquivados</option>
+    </select><span>{list.length} variações · {list.reduce((s,p)=>s+Math.max(0,available(p)),0)} un. disponíveis</span>
+  </div>
+  <div className="lux-inventory-factory-list">
+    {groupedStock.map(group=><section className="lux-inventory-factory" key={group.factory}>
+      <div className="lux-inventory-factory-title">
+        <div><small>{group.factory==='EDN'?'SHOWROOM LUX DECOR':'ESTOQUE DE ESTOFADOS'}</small><h3>{group.factory}</h3></div>
+        <span>{group.count} variações</span>
+      </div>
+      {group.sections.map(section=><div className="lux-inventory-model" key={section.name}>
+        <div className="lux-inventory-model-title"><h4>{section.name}</h4><small>{section.rows.length} {section.rows.length===1?'variação':'variações'}</small></div>
+        <div className="lux-inventory-model-head"><span>Módulo / medida</span><span>Cor / código</span><span>Quantidade</span><span>Ações</span></div>
+        {section.rows.map(p=>{const disp=available(p);return <div className="lux-inventory-variant" key={p.id}>
+          <div className="lux-inventory-measure"><b>{moduleLabel(p)}</b><small>{p.sku||'Sem código'}</small></div>
+          <div className="lux-inventory-color"><b>{p.color||'Não informado'}</b>{p.notes&&<small>{p.notes}</small>}</div>
+          <div className="lux-inventory-quantity">{p.inventoryPending?<><b className="pending">A conferir</b><small>Não informado</small></>:<><b>{disp} un.</b><small>{p.reserved?String(p.reserved)+' reservadas':'Disponível'}</small></>}</div>
+          <div className="lux-inventory-variant-actions">
+            {p.active!==false&&<><button type="button" onClick={()=>chooseAction(p,'in')} title="Entrada de estoque"><ArrowDownToLine size={14}/>Entrada</button><button type="button" onClick={()=>chooseAction(p,'out')} title="Saída de estoque"><ArrowUpFromLine size={14}/>Saída</button></>}
+            <button type="button" onClick={()=>setActionProduct(p)}><SlidersHorizontal size={14}/>Gerenciar</button>
+          </div>
+        </div>})}
+      </div>)}
+    </section>)}
+    {!groupedStock.length&&<div className="panel lux-stock-empty">Nenhuma variação encontrada. Revise a pesquisa ou os filtros.</div>}
+  </div>
+ </>}
  {tab==='movements'&&<><div className="section-intro"><History size={18}/><div><b>Histórico de movimentações</b><p>Entradas, saídas, inventários, vendas e transferências.</p></div></div><div className="list-panel"><div className="list-head movement-columns"><span>Data</span><span>Produto</span><span>Movimento</span><span>Origem</span></div>{(Array.isArray(movements)?movements:[]).slice(0,500).map(m=><div className="list-row movement-columns" key={m.id}><span>{m.at?new Date(m.at).toLocaleString('pt-BR'):'—'}</span><span><b>{m.product||'Produto'}</b><small>{m.sku||'—'}</small></span><span><b className={m.type==='in'?'positive':m.type==='transfer'?'':'danger'}>{m.type==='transfer'?'Transferência':`${m.type==='in'?'+':'-'}${m.qty||0} un.`}</b><small>{m.type==='transfer'?`${m.beforeLocation||'—'} → ${m.afterLocation||'—'}`:`${m.before??'—'} → ${m.after??'—'}`}</small></span><span>{m.origin||'Sistema'}</span></div>)}{!movements.length&&<p className="empty-list">Nenhuma movimentação registrada.</p>}</div></>}
  {tab==='inventory'&&<><div className="section-intro"><ClipboardList size={18}/><div><b>Inventário físico</b><p>Contagem cega por localização para reduzir viés e divergências.</p></div><label className="blind-inventory-toggle"><input type="checkbox" checked={blindInventory} onChange={e=>setBlindInventory(e.target.checked)}/><EyeOff size={15}/>Contagem cega</label></div><div className="toolbar"><label className="search"><Search size={17}/><input value={invQ} onChange={e=>setInvQ(e.target.value)} placeholder="Filtrar inventário..."/></label><select className="period-input" value={invFilter} onChange={e=>setInvFilter(e.target.value)}><option value="all">Todos</option><option value="low">Baixo estoque</option><option value="zero">Zerados</option></select><select className="period-input" value={invLocation} onChange={e=>setInvLocation(e.target.value)}>{locations.map(x=><option key={x} value={x}>{x==='all'?'Todas as localizações':x}</option>)}</select><span>{invList.length} item(ns)</span></div><div className="inventory-inline-list">{invList.slice(0,300).map(p=><label key={p.id}><span><b>{p.name}</b><small>{p.sku} · {p.location||'Sem localização'}{!blindInventory?` · sistema ${p.stock} un.`:''}</small></span><input data-inventory-id={p.id} type="number" defaultValue={blindInventory?'':p.stock} placeholder="Contagem"/></label>)}</div>{invList.length>300&&<div className="notice"><AlertTriangle size={16}/>Mostrando os primeiros 300 itens. Refine a busca ou localização.</div>}<div className="inventory-actions"><button className="primary" onClick={applyInventory}><PackageCheck size={16}/>Aplicar divergências</button></div></>}
  {tab==='reorder'&&<><div className="section-intro"><TrendingUp size={18}/><div><b>Sugestão automática de compra</b><p>Considera estoque mínimo, reservas e necessidade calculada pelo giro recente.</p></div></div><div className="list-panel"><div className="list-head reorder-columns"><span>Produto</span><span>Fornecedor</span><span>Disponível</span><span>Mínimo</span><span>Sugestão</span><span>Valor estimado</span></div>{suggestions.map(({p,qty})=><div className="list-row reorder-columns" key={p.id}><span><b>{p.name}</b><small>{p.sku}</small></span><span>{p.supplier||'—'}</span><span>{available(p)}</span><span>{p.minStock||0}</span><span><b>{qty} un.</b></span><span>{money((Number(p.cost)||0)*qty)}</span></div>)}{!suggestions.length&&<p className="empty-list">Nenhuma necessidade de compra identificada.</p>}</div></>}
