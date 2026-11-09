@@ -127,5 +127,12 @@ assert.ok(stockScreen.includes('moduleLabel=p=>')&&stockScreen.includes("(Number
 assert.ok(stockScreen.includes('moduleOrder=p=>')&&stockScreen.includes('sort((a,b)=>moduleOrder(a)-moduleOrder(b)'),'Módulos devem ser exibidos em ordem crescente');
 assert.ok(stockScreen.includes('p.color')&&stockScreen.includes('p.inventoryPending'),'Cor e quantidade pendente devem permanecer visíveis');
 assert.ok(stockScreen.includes("chooseAction(p,'in')")&&stockScreen.includes("chooseAction(p,'out')"),'Entrada e saída de estoque devem continuar acessíveis');
+const cashierWithPermuta=read('src/pages/Cashier.jsx');
+assert.ok(cashierWithPermuta.includes("'Permuta','Boleto'")&&cashierWithPermuta.includes("'Permuta':ArrowLeftRight"),'Permuta deve aparecer no seletor de pagamento');
+assert.ok(cashierWithPermuta.includes("nonCash:p.type==='Permuta'")&&cashierWithPermuta.includes("category:p.type==='Permuta'?'Permuta':'Vendas'"),'Permuta deve ser registrada como recebimento não monetário');
+assert.ok(cashierWithPermuta.includes('exchangeDescription')&&cashierWithPermuta.includes('Bem ou serviço recebido na permuta'),'Permuta deve permitir descrever o bem recebido');
+assert.ok(cashierWithPermuta.includes("newClient,setNewClient]=useState({name:'',address:'',email:'',doc:'',phone:''})"),'Cadastro rápido deve ter nome, endereço, e-mail, CPF e telefone');
+assert.ok(cashierWithPermuta.includes('address:newClient.address.trim()')&&cashierWithPermuta.includes('email:newClient.email.trim()'),'Cadastro rápido deve salvar os dados no cliente');
+assert.ok(cashierWithPermuta.includes('clientAddress:selectedCustomer?.address')&&cashierWithPermuta.includes('clientPhone:selectedCustomer?.phone'),'Pedido de entrega deve receber endereço e telefone do cliente');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
