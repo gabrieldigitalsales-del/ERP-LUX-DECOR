@@ -15,19 +15,19 @@ export default function Salespeople(){
  const add=()=>{setDirty(true);setRows(x=>[...x,blank()])};
  const remove=index=>{setDirty(true);setRows(x=>x.filter((_,i)=>i!==index))};
  const save=async()=>{
-  if(!admin)return toast('Entre com um usuário da Lux Decor para cadastrar vendedoras.','warning','Permissão');
+  if(!admin)return toast('Entre com um usuário da Lux Decor para cadastrar vendedores.','warning','Permissão');
   if(busy)return;setBusy(true);
   try{
    const saved=saveSalespeople(rows);
    await flushCloudWrites();
    setRows(saved);setDirty(false);
-   addAudit('Cadastro de vendedoras atualizado','Comercial',saved.length+' vendedoras');
-   toast('Vendedoras salvas no Supabase.','success','Vendedoras');
-  }catch(e){toast(e.message||'Falha ao salvar vendedoras.','warning','Vendedoras')}
+   addAudit('Cadastro de vendedores atualizado','Comercial',saved.length+' vendedores');
+   toast('Vendedores salvas no Supabase.','success','Vendedores');
+  }catch(e){toast(e.message||'Falha ao salvar vendedores.','warning','Vendedores')}
   finally{setBusy(false)}
  };
  return <section className="page lux-salespeople-page">
-  <PageHeader title="Vendedoras" subtitle="Cadastre as profissionais que poderão ser selecionadas nas vendas e no PDV." action={admin&&<div className="lux-seller-actions"><button className="secondary" type="button" onClick={add}><Plus size={14}/>Adicionar</button><button className="primary" type="button" disabled={busy||!dirty} onClick={save}><Save size={14}/>{busy?'Salvando...':'Salvar'}</button></div>}/>
+  <PageHeader title="Vendedores" subtitle="Cadastre os profissionais que poderão ser selecionadas nas vendas e no PDV." action={admin&&<div className="lux-seller-actions"><button className="secondary" type="button" onClick={add}><Plus size={14}/>Adicionar</button><button className="primary" type="button" disabled={busy||!dirty} onClick={save}><Save size={14}/>{busy?'Salvando...':'Salvar'}</button></div>}/>
   <div className="panel lux-salespeople-panel">
    <div className="lux-salespeople-info"><Users size={18}/><div><b>Equipe de vendas</b><p>Nome, PIN opcional, comissão, meta e limite de desconto. Desativar mantém o histórico da profissional.</p></div></div>
    {rows.length===0?<div className="lux-salespeople-empty"><Users size={26}/><b>Nenhuma vendedora cadastrada</b><p>Use o botão Adicionar para registrar a primeira profissional.</p>{admin&&<button className="secondary" onClick={add}><Plus size={14}/>Adicionar vendedora</button>}</div>:<div className="lux-salespeople-list">
