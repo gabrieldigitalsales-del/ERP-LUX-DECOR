@@ -122,5 +122,10 @@ assert.ok(pdvFinal.includes('<b>Forma de pagamento</b>')&&pdvFinal.includes('pay
 const stockScreen=read('src/pages/Stock.jsx');
 assert.ok(!stockScreen.includes('lux-stock-import-bar')&&!stockScreen.includes('importInventory')&&!stockScreen.includes('importConfirm'),'A faixa e o importador legado de 54 cadastros não devem aparecer no estoque');
 assert.ok(read('src/pages/InventoryHub.jsx').includes('<Stock embedded')&&read('src/pages/InventoryHub.jsx').includes('<Products embedded'),'Catálogo e estoque compartilham a mesma lista de produtos');
+assert.ok(stockScreen.includes('groupInventory=items=>')&&stockScreen.includes('groupedStock.map(group=>'),'Estoque deve agrupar por fábrica e modelo');
+assert.ok(stockScreen.includes('moduleLabel=p=>')&&stockScreen.includes("(Number(raw)/100).toLocaleString('pt-BR'"),'Módulos numéricos devem aparecer em metros');
+assert.ok(stockScreen.includes('moduleOrder=p=>')&&stockScreen.includes('sort((a,b)=>moduleOrder(a)-moduleOrder(b)'),'Módulos devem ser exibidos em ordem crescente');
+assert.ok(stockScreen.includes('p.color')&&stockScreen.includes('p.inventoryPending'),'Cor e quantidade pendente devem permanecer visíveis');
+assert.ok(stockScreen.includes("chooseAction(p,'in')")&&stockScreen.includes("chooseAction(p,'out')"),'Entrada e saída de estoque devem continuar acessíveis');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
