@@ -1122,3 +1122,10 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-stock-empty{padding:28px;text-align:center;color:#6e8095}
 @media(max-width:830px){.lux-inventory-model-head{display:none}.lux-inventory-variant{grid-template-columns:1fr 1fr;gap:12px}.lux-inventory-variant-actions{grid-column:1/-1;justify-content:flex-start}.lux-inventory-model{padding:15px 14px 6px}}
 @media(max-width:520px){.lux-inventory-factory-title{padding:14px}.lux-inventory-factory-title h3{font-size:16px}.lux-inventory-model-title h4{font-size:14px}.lux-inventory-variant{padding:12px 10px;column-gap:8px}.lux-inventory-variant-actions button{flex:1;justify-content:center}}
+
+
+/* Cadastro de clientes: endereço dividido em campos acessíveis no desktop e celular. */
+.lux-customer-address-fields{display:contents}
+.lux-customer-address-fields .form-field.wide{grid-column:1/-1}
+.lux-customer-legacy-address{grid-column:1/-1;background:#f0f4fa;border:1px solid #dce5ef;border-radius:5px;padding:10px 12px;font-size:12px;line-height:1.45;color:#526d8a}
+@media(max-width:600px){.lux-customer-address-fields .form-field{min-width:0}}
