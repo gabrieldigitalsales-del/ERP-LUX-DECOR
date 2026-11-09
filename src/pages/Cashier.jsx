@@ -4,7 +4,7 @@ import{
   Search,Plus,Minus,Trash2,ShoppingBag,WalletCards,Banknote,ReceiptText,LockKeyhole,UnlockKeyhole,
   ArrowDownToLine,ArrowUpFromLine,UserRound,CheckCircle2,PauseCircle,PlayCircle,History,UserPlus,
   Printer,Eye,ShieldCheck,Clock3,CircleDollarSign,Barcode,Percent,Tag,Layers3,ChevronRight,RefreshCcw,
-  CreditCard,Landmark,ScanLine,X,PackageCheck,Calculator,NotebookText
+  CreditCard,Landmark,ScanLine,X,PackageCheck,Calculator,NotebookText,ArrowLeftRight
 }from'lucide-react';
 import PageHeader from'../components/PageHeader';
 import Modal from'../components/Modal';
@@ -18,11 +18,11 @@ import{uid,nextSequence}from'../utils/ids';
 import{can,currentRole}from'../utils/permissions';
 import{getCloudSession}from'../utils/cloudAuth';import{activeSalespeople,sellerByName,sellerCommission,sellerDiscountLimit,verifySellerPin}from'../utils/commercial';import{checkManagerPin}from'../utils/managerPin';
 
-const paymentOptions=['Dinheiro','Pix','Cartão de crédito','Cartão de débito','Transferência','Boleto','Crediário','Crédito da loja'];
-const immediate=['Dinheiro','Pix','Cartão de crédito','Cartão de débito','Transferência'];
+const paymentOptions=['Dinheiro','Pix','Cartão de crédito','Cartão de débito','Transferência','Permuta','Boleto','Crediário','Crédito da loja'];
+const immediate=['Dinheiro','Pix','Cartão de crédito','Cartão de débito','Transferência','Permuta'];
 const paymentIcon={
   'Dinheiro':Banknote,'Pix':ScanLine,'Cartão de crédito':CreditCard,'Cartão de débito':CreditCard,
-  'Transferência':Landmark,'Boleto':ReceiptText,'Crediário':NotebookText,'Crédito da loja':WalletCards
+  'Transferência':Landmark,'Permuta':ArrowLeftRight,'Boleto':ReceiptText,'Crediário':NotebookText,'Crédito da loja':WalletCards
 };
 const normalizePdvSearch=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/\s+/g,' ').trim();
 const getCommissionRate=()=>Number(erpStorage.getItem('luxdecor-commission-rate')||2);
@@ -74,7 +74,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const[moveValue,setMoveValue]=useState('');
   const[moveNote,setMoveNote]=useState('');
   const[clientOpen,setClientOpen]=useState(false);
-  const[newClient,setNewClient]=useState({name:'',doc:'',phone:''});
+  const[newClient,setNewClient]=useState({name:'',address:'',email:'',doc:'',phone:''});
   const[checkoutOpen,setCheckoutOpen]=useState(false);
   const[paymentRows,setPaymentRows]=useState([{type:'Dinheiro',amount:'',acquirer:'',nsu:'',installments:1}]);
   const[cashReceived,setCashReceived]=useState('');
@@ -253,12 +253,15 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
 
   const saveClient=async ()=>{
     if(!newClient.name.trim())return toast('Informe o nome do cliente.','warning','Cliente');
+    if(newClient.email.trim()&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newClient.email.trim()))return toast('Informe um e-mail válido.','warning','Cliente');
+    const cpfDigits=newClient.doc.replace(/\D/g,'');
+    if(cpfDigits.length>0&&cpfDigits.length!==11)return toast('Informe um CPF com 11 números.','warning','Cliente');
     const id=uid('client');
-    const c={id,name:newClient.name.trim(),doc:newClient.doc.trim(),phone:newClient.phone.trim(),total:0};
+    const c={id,name:newClient.name.trim(),address:newClient.address.trim(),email:newClient.email.trim(),doc:newClient.doc.trim(),phone:newClient.phone.trim(),total:0};
     const nextClients=[c,...clients];
     const tx=await commitLocalTransaction('cash-quick-client',{[STORAGE_KEYS.clients]:nextClients});
     if(!tx.ok)return toast('Não foi possível salvar o cliente.','warning','Cliente');
-    setClients?.(nextClients);setClient(c.name);setNewClient({name:'',doc:'',phone:''});setClientOpen(false);
+    setClients?.(nextClients);setClient(c.name);setNewClient({name:'',address:'',email:'',doc:'',phone:''});setClientOpen(false);
     addAudit('Cliente rápido criado','Caixa',c.name);toast('Cliente cadastrado e selecionado.','success','Cliente');
   };
 
@@ -585,7 +588,16 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
 
     {sellerPinOpen&&<Modal title="PIN da vendedora" subtitle={pendingSeller} onClose={()=>{setSellerPinOpen(false);setPendingSeller('');setSellerPin('')}}><label className="form-field"><span>PIN rápido</span><input autoFocus type="password" inputMode="numeric" maxLength="6" value={sellerPin} onChange={e=>setSellerPin(e.target.value.replace(/\D/g,''))} onKeyDown={e=>{if(e.key==='Enter'){if(verifySellerPin(pendingSeller,sellerPin)){setSeller(pendingSeller);setSellerPinOpen(false);setPendingSeller('');setSellerPin('')}else toast('PIN da vendedora inválido.','warning','Vendedora')}}}/></label><div className="modal-actions"><button className="primary" onClick={()=>{if(!verifySellerPin(pendingSeller,sellerPin))return toast('PIN da vendedora inválido.','warning','Vendedora');setSeller(pendingSeller);setSellerPinOpen(false);setPendingSeller('');setSellerPin('')}}>Confirmar vendedora</button></div></Modal>}
 
-    {clientOpen&&<Modal title="Cliente rápido" subtitle="Cadastre sem abandonar a venda atual." onClose={()=>setClientOpen(false)}><div className="form-grid"><label className="form-field wide"><span>Nome</span><input autoFocus value={newClient.name} onChange={e=>setNewClient({...newClient,name:e.target.value})}/></label><label className="form-field"><span>CPF/CNPJ</span><input value={newClient.doc} onChange={e=>setNewClient({...newClient,doc:e.target.value})}/></label><label className="form-field"><span>Telefone</span><input value={newClient.phone} onChange={e=>setNewClient({...newClient,phone:e.target.value})}/></label></div><div className="modal-actions"><button className="primary" onClick={saveClient}><UserPlus size={15}/>Cadastrar e selecionar</button></div></Modal>}
+    {clientOpen&&<Modal title="Cadastrar cliente" subtitle="Informações para a venda e a entrega dos móveis." onClose={()=>setClientOpen(false)}>
+      <div className="form-grid">
+        <label className="form-field wide"><span>Nome completo</span><input autoFocus autoComplete="name" required value={newClient.name} onChange={e=>setNewClient({...newClient,name:e.target.value})} placeholder="Nome do cliente"/></label>
+        <label className="form-field wide"><span>Endereço de entrega</span><input autoComplete="street-address" value={newClient.address} onChange={e=>setNewClient({...newClient,address:e.target.value})} placeholder="Rua, número, complemento, bairro e cidade"/></label>
+        <label className="form-field"><span>E-mail</span><input type="email" autoComplete="email" value={newClient.email} onChange={e=>setNewClient({...newClient,email:e.target.value})} placeholder="cliente@exemplo.com"/></label>
+        <label className="form-field"><span>CPF</span><input inputMode="numeric" autoComplete="off" maxLength={14} value={newClient.doc} onChange={e=>setNewClient({...newClient,doc:e.target.value})} placeholder="000.000.000-00"/></label>
+        <label className="form-field wide"><span>Telefone / WhatsApp</span><input type="tel" autoComplete="tel" value={newClient.phone} onChange={e=>setNewClient({...newClient,phone:e.target.value})} placeholder="(31) 99999-9999"/></label>
+      </div>
+      <div className="modal-actions"><button className="primary" onClick={saveClient}><UserPlus size={15}/>Cadastrar e selecionar</button></div>
+    </Modal>}
 
     {returnSale&&<Modal size="large" title={`Troca / devolução · Venda #${returnSale.id}`} subtitle="Selecione somente os itens e quantidades que retornaram." onClose={()=>setReturnSale(null)}><div className="return-modal-list">{(returnSale.items||[]).map(i=>{const previous=(returnSale.returns||[]).flatMap(r=>r.items||[]).filter(x=>String(x.productId)===String(i.productId)).reduce((s,x)=>s+(Number(x.qty)||0),0);const available=Math.max(0,(Number(i.qty)||0)-previous);return <div key={i.productId}><span><b>{i.name}</b><small>{i.sku||'Sem SKU'} · vendido {i.qty} · já devolvido {previous}</small></span><label>Qtd.<input type="number" min="0" max={available} value={returnQty[i.productId]||0} onChange={e=>setReturnQty({...returnQty,[i.productId]:Math.max(0,Math.min(available,Number(e.target.value)||0))})}/></label><strong>{money((Number(i.price)||0)*(Number(returnQty[i.productId])||0))}</strong></div>})}</div><label className="form-field wide"><span>Motivo da devolução</span><input value={returnReason} onChange={e=>setReturnReason(e.target.value)} placeholder="Ex.: troca por outro modelo, desistência, avaria..."/></label><div className="modal-actions"><button className="secondary" onClick={()=>setReturnSale(null)}>Cancelar</button><button className="primary" onClick={confirmReturn}><RefreshCcw size={15}/>Confirmar devolução</button></div></Modal>}
 
