@@ -134,5 +134,13 @@ assert.ok(cashierWithPermuta.includes('exchangeDescription')&&cashierWithPermuta
 assert.ok(cashierWithPermuta.includes("newClient,setNewClient]=useState({name:'',address:'',email:'',doc:'',phone:''})"),'Cadastro rápido deve ter nome, endereço, e-mail, CPF e telefone');
 assert.ok(cashierWithPermuta.includes('address:newClient.address.trim()')&&cashierWithPermuta.includes('email:newClient.email.trim()'),'Cadastro rápido deve salvar os dados no cliente');
 assert.ok(cashierWithPermuta.includes('clientAddress:selectedCustomer?.address')&&cashierWithPermuta.includes('clientPhone:selectedCustomer?.phone'),'Pedido de entrega deve receber endereço e telefone do cliente');
+const addressUtil=read('src/utils/customerAddress.js');
+assert.ok(addressUtil.includes("export const formatCustomerAddress=")&&addressUtil.includes("export const customerAddressFields="),'Endereço estruturado deve ter formatador único');
+assert.ok(addressUtil.includes("String(customer.address||'').trim()"),'Endereço antigo deve continuar legível');
+const pdvAddress=read('src/pages/Cashier.jsx');
+for(const field of ['street','number','neighborhood','cep','complement','city','state'])assert.ok(pdvAddress.includes('newClient.'+field),'Campo obrigatório no cadastro rápido: '+field);
+assert.ok(pdvAddress.includes('address:formatCustomerAddress(selectedCustomer)')&&pdvAddress.includes('clientAddressFields:customerAddressFields(selectedCustomer)'),'Entrega e pedido devem receber endereço completo e campos separados');
+const clientAddress=read('src/pages/SimpleRegistry.jsx');
+assert.ok(clientAddress.includes('lux-customer-address-fields')&&clientAddress.includes('...customerAddressFields(form)'),'Cadastro geral de clientes deve preservar campos de entrega');
 console.log('OK: regressões de login, usuários, estoque, movimentações e PDV.');
 
