@@ -17,6 +17,7 @@ import{safeRead,safeWrite,createLocalSnapshot,commitLocalTransaction,STORAGE_KEY
 import{uid,nextSequence}from'../utils/ids';
 import{can,currentRole}from'../utils/permissions';
 import{getCloudSession}from'../utils/cloudAuth';import{activeSalespeople,sellerByName,sellerCommission,sellerDiscountLimit,verifySellerPin}from'../utils/commercial';import{checkManagerPin}from'../utils/managerPin';
+import{formatCustomerAddress,customerAddressFields,isValidCep}from'../utils/customerAddress';
 
 const paymentOptions=['Dinheiro','Pix','Cartão de crédito','Cartão de débito','Transferência','Permuta','Boleto','Crediário','Crédito da loja'];
 const immediate=['Dinheiro','Pix','Cartão de crédito','Cartão de débito','Transferência','Permuta'];
@@ -74,7 +75,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const[moveValue,setMoveValue]=useState('');
   const[moveNote,setMoveNote]=useState('');
   const[clientOpen,setClientOpen]=useState(false);
-  const[newClient,setNewClient]=useState({name:'',address:'',email:'',doc:'',phone:''});
+  const[newClient,setNewClient]=useState({name:'',address:'',email:'',doc:'',phone:'',street:'',number:'',neighborhood:'',cep:'',complement:'',city:'',state:''});
   const[checkoutOpen,setCheckoutOpen]=useState(false);
   const[paymentRows,setPaymentRows]=useState([{type:'Dinheiro',amount:'',acquirer:'',nsu:'',installments:1}]);
   const[cashReceived,setCashReceived]=useState('');
@@ -256,12 +257,14 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(newClient.email.trim()&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newClient.email.trim()))return toast('Informe um e-mail válido.','warning','Cliente');
     const cpfDigits=newClient.doc.replace(/\D/g,'');
     if(cpfDigits.length>0&&cpfDigits.length!==11)return toast('Informe um CPF com 11 números.','warning','Cliente');
+    if(!isValidCep(newClient.cep))return toast('Informe um CEP com 8 números.','warning','Cliente');
     const id=uid('client');
-    const c={id,name:newClient.name.trim(),address:newClient.address.trim(),email:newClient.email.trim(),doc:newClient.doc.trim(),phone:newClient.phone.trim(),total:0};
+    const fields=customerAddressFields(newClient);
+    const c={id,name:newClient.name.trim(),...fields,address:formatCustomerAddress(newClient),email:newClient.email.trim(),doc:newClient.doc.trim(),phone:newClient.phone.trim(),total:0};
     const nextClients=[c,...clients];
     const tx=await commitLocalTransaction('cash-quick-client',{[STORAGE_KEYS.clients]:nextClients});
     if(!tx.ok)return toast('Não foi possível salvar o cliente.','warning','Cliente');
-    setClients?.(nextClients);setClient(c.name);setNewClient({name:'',address:'',email:'',doc:'',phone:''});setClientOpen(false);
+    setClients?.(nextClients);setClient(c.name);setNewClient({name:'',address:'',email:'',doc:'',phone:'',street:'',number:'',neighborhood:'',cep:'',complement:'',city:'',state:''});setClientOpen(false);
     addAudit('Cliente rápido criado','Caixa',c.name);toast('Cliente cadastrado e selecionado.','success','Cliente');
   };
 
@@ -350,8 +353,8 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
       const nextInv=[{id:uid('nf'),number:'',saleId:id,client:c,status:'Rascunho',amount:total,createdAt:now,items:cart,origin:'Caixa'},...currentInv];
       const selectedCustomer=clients.find(x=>x.name===c);
       const deliveries=deliveryRequired?safeRead('luxdecor-deliveries-v29',[]):[];
-      const nextDeliveries=deliveryRequired?[{id:uid('del'),saleId:id,client:c,date:isoToday(),window:'Horário a definir',address:selectedCustomer?.address||'',phone:selectedCustomer?.phone||'',email:selectedCustomer?.email||'',cpf:selectedCustomer?.doc||'',status:'Agendada',items:cart,createdAt:now,autoCreated:true},...(Array.isArray(deliveries)?deliveries:[])]:null;
-      const currentOrders=safeRead('luxdecor-orders-v217',[]);const nextOrders=[{id:uid('ord'),saleId:id,client:c,clientAddress:selectedCustomer?.address||'',clientPhone:selectedCustomer?.phone||'',clientEmail:selectedCustomer?.email||'',clientCpf:selectedCustomer?.doc||'',seller,operator,date:isoToday(),createdAt:now,updatedAt:now,items:cart,total,fulfillment:deliveryRequired?'Entrega':'Retirada',status:'Aguardando separação',source:'cashier'},...(Array.isArray(currentOrders)?currentOrders:[])];
+      const nextDeliveries=deliveryRequired?[{id:uid('del'),saleId:id,client:c,date:isoToday(),window:'Horário a definir',address:formatCustomerAddress(selectedCustomer),...customerAddressFields(selectedCustomer),phone:selectedCustomer?.phone||'',email:selectedCustomer?.email||'',cpf:selectedCustomer?.doc||'',status:'Agendada',items:cart,createdAt:now,autoCreated:true},...(Array.isArray(deliveries)?deliveries:[])]:null;
+      const currentOrders=safeRead('luxdecor-orders-v217',[]);const nextOrders=[{id:uid('ord'),saleId:id,client:c,clientAddress:formatCustomerAddress(selectedCustomer),clientAddressFields:customerAddressFields(selectedCustomer),clientPhone:selectedCustomer?.phone||'',clientEmail:selectedCustomer?.email||'',clientCpf:selectedCustomer?.doc||'',seller,operator,date:isoToday(),createdAt:now,updatedAt:now,items:cart,total,fulfillment:deliveryRequired?'Entrega':'Retirada',status:'Aguardando separação',source:'cashier'},...(Array.isArray(currentOrders)?currentOrders:[])];
       const nextCashLog=[{id:uid('cashlog'),sessionId:session.id,sessionCode:session.sessionCode,kind:'sale',saleId:id,amount:total,cashAmount:cashPart,payment:paymentLabel,paymentDetails:normalizedPayments,change,at:now,seller,operator},...cashLog];
 
       const tx=await commitLocalTransaction(`cash-sale-${id}`,{
@@ -593,7 +596,13 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     {clientOpen&&<Modal title="Cadastrar cliente" subtitle="Informações para a venda e a entrega dos móveis." onClose={()=>setClientOpen(false)}>
       <div className="form-grid">
         <label className="form-field wide"><span>Nome completo</span><input autoFocus autoComplete="name" required value={newClient.name} onChange={e=>setNewClient({...newClient,name:e.target.value})} placeholder="Nome do cliente"/></label>
-        <label className="form-field wide"><span>Endereço de entrega</span><input autoComplete="street-address" value={newClient.address} onChange={e=>setNewClient({...newClient,address:e.target.value})} placeholder="Rua, número, complemento, bairro e cidade"/></label>
+        <label className="form-field wide"><span>Rua / Avenida</span><input autoComplete="address-line1" value={newClient.street} onChange={e=>setNewClient({...newClient,street:e.target.value})} placeholder="Nome da rua ou avenida"/></label>
+        <label className="form-field"><span>Número</span><input value={newClient.number} onChange={e=>setNewClient({...newClient,number:e.target.value})} placeholder="Número ou S/N"/></label>
+        <label className="form-field"><span>Bairro</span><input autoComplete="address-level3" value={newClient.neighborhood} onChange={e=>setNewClient({...newClient,neighborhood:e.target.value})} placeholder="Bairro"/></label>
+        <label className="form-field"><span>CEP</span><input inputMode="numeric" autoComplete="postal-code" maxLength={9} value={newClient.cep} onChange={e=>setNewClient({...newClient,cep:e.target.value})} placeholder="00000-000"/></label>
+        <label className="form-field"><span>Complemento</span><input autoComplete="address-line2" value={newClient.complement} onChange={e=>setNewClient({...newClient,complement:e.target.value})} placeholder="Apartamento, bloco, referência"/></label>
+        <label className="form-field"><span>Cidade</span><input autoComplete="address-level2" value={newClient.city} onChange={e=>setNewClient({...newClient,city:e.target.value})} placeholder="Cidade"/></label>
+        <label className="form-field"><span>Estado (UF)</span><input maxLength={2} autoComplete="address-level1" value={newClient.state} onChange={e=>setNewClient({...newClient,state:e.target.value.toUpperCase()})} placeholder="MG"/></label>
         <label className="form-field"><span>E-mail</span><input type="email" autoComplete="email" value={newClient.email} onChange={e=>setNewClient({...newClient,email:e.target.value})} placeholder="cliente@exemplo.com"/></label>
         <label className="form-field"><span>CPF</span><input inputMode="numeric" autoComplete="off" maxLength={14} value={newClient.doc} onChange={e=>setNewClient({...newClient,doc:e.target.value})} placeholder="000.000.000-00"/></label>
         <label className="form-field wide"><span>Telefone / WhatsApp</span><input type="tel" autoComplete="tel" value={newClient.phone} onChange={e=>setNewClient({...newClient,phone:e.target.value})} placeholder="(31) 99999-9999"/></label>
