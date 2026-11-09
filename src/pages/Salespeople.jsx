@@ -27,10 +27,10 @@ export default function Salespeople(){
   finally{setBusy(false)}
  };
  return <section className="page lux-salespeople-page">
-  <PageHeader title="Vendedores" subtitle="Cadastre os profissionais que poderão ser selecionadas nas vendas e no PDV." action={admin&&<div className="lux-seller-actions"><button className="secondary" type="button" onClick={add}><Plus size={14}/>Adicionar</button><button className="primary" type="button" disabled={busy||!dirty} onClick={save}><Save size={14}/>{busy?'Salvando...':'Salvar'}</button></div>}/>
+  <PageHeader title="Vendedores" subtitle="Cadastre os profissionais que poderão ser selecionados nas vendas e no PDV." action={admin&&<div className="lux-seller-actions"><button className="secondary" type="button" onClick={add}><Plus size={14}/>Adicionar</button><button className="primary" type="button" disabled={busy||!dirty} onClick={save}><Save size={14}/>{busy?'Salvando...':'Salvar'}</button></div>}/>
   <div className="panel lux-salespeople-panel">
-   <div className="lux-salespeople-info"><Users size={18}/><div><b>Equipe de vendas</b><p>Nome, PIN opcional, comissão, meta e limite de desconto. Desativar mantém o histórico da profissional.</p></div></div>
-   {rows.length===0?<div className="lux-salespeople-empty"><Users size={26}/><b>Nenhuma vendedora cadastrada</b><p>Use o botão Adicionar para registrar a primeira profissional.</p>{admin&&<button className="secondary" onClick={add}><Plus size={14}/>Adicionar vendedora</button>}</div>:<div className="lux-salespeople-list">
+   <div className="lux-salespeople-info"><Users size={18}/><div><b>Equipe de vendas</b><p>Nome, PIN opcional, comissão, meta e limite de desconto. Desativar mantém o histórico do profissional.</p></div></div>
+   {rows.length===0?<div className="lux-salespeople-empty"><Users size={26}/><b>Nenhum vendedor cadastrado</b><p>Use o botão Adicionar para registrar o primeiro profissional.</p>{admin&&<button className="secondary" onClick={add}><Plus size={14}/>Adicionar vendedora</button>}</div>:<div className="lux-salespeople-list">
     {rows.map((person,i)=><div key={person.id||i} className="lux-salespeople-row">
       <label className="lux-salespeople-name"><span>Nome da vendedora</span><input disabled={!admin} value={person.name} placeholder="Nome completo" onChange={e=>edit(i,'name',e.target.value)}/></label>
       <label><span>PIN (opcional)</span><input disabled={!admin} inputMode="numeric" value={person.pin||''} maxLength={6} placeholder="Até 6 dígitos" onChange={e=>edit(i,'pin',e.target.value.replace(/\D/g,'').slice(0,6))}/></label>
