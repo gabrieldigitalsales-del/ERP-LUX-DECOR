@@ -10,7 +10,7 @@ export const navItems=[
   ['cashier','Caixa',Store,'Operação'],
   ['sales','Histórico de vendas',ShoppingCart,'Operação'],
   ['orders','Pedidos',ClipboardCheck,'Operação'],
-  ['salespeople','Vendedoras',Users,'Cadastros'],
+  ['salespeople','Vendedores',Users,'Cadastros'],
   ['stock','Produtos e Estoque',Boxes,'Estoque'],
   ['movements','Movimentações',ArrowLeftRight,'Estoque'],
   ['clients','Clientes',Users,'Cadastros'],
