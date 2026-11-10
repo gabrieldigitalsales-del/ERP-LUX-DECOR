@@ -23,7 +23,7 @@ export default function CloudLogin({onAuthenticated}){
  };
  return <div className="login-screen"><div className="login-card">
   <div className="login-brand"><img src={logo} alt="Logo Lux Decor"/><span>GESTÃO EMPRESARIAL</span></div>
-  <div className="login-copy"><h1>{setup?'Ativar acessos iniciais':'Entrar no LUX DECOR ERP'}</h1><p>{setup?'Esta etapa é feita uma única vez pelo responsável da Lux Decor.':'Informe seu usuário e sua senha para acessar o sistema.'}</p></div>
+  <div className="login-copy">{setup&&<h1>Ativar acessos iniciais</h1>}<p>{setup?'Esta etapa é feita uma única vez pelo responsável da Lux Decor.':'Informe seu usuário e sua senha para acessar o sistema.'}</p></div>
   <form onSubmit={submit}>
    {setup?<>
     <label><span>Código de ativação do administrador</span><div className="login-input"><ShieldCheck size={17}/><input autoFocus autoComplete="off" value={activationCode} onChange={e=>setActivationCode(e.target.value.trim())} placeholder="Cole o código de ativação" required/></div></label>
