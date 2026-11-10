@@ -36,7 +36,6 @@ export default function CloudLogin({onAuthenticated}){
    {error&&<div role="alert" className="login-error">{error}</div>}
    <button className="login-submit" disabled={busy} type="submit">{busy?'Verificando...':setup?'Criar os três acessos':'Entrar'}</button>
   </form>
-  <div className="erp-cloud-login-actions"><button type="button" onClick={()=>{setSetup(x=>!x);setError('');setInfo('')}}>{setup?'Voltar para entrar':'Primeira configuração do sistema'}</button></div>
   <div className="login-nexor"><span>Feito pela</span><img src={nexor} alt="NEXOR"/></div>
  </div></div>;
 }
