@@ -1,5 +1,6 @@
 import React,{useMemo,useState}from'react';
 import{Boxes,ArrowDownToLine,ArrowUpFromLine,History,Search,ClipboardList,AlertTriangle,PackageCheck,ArrowLeftRight,Trash2,RotateCcw,ShoppingCart,EyeOff,MapPin,RefreshCw,Store,Truck,TrendingUp,SlidersHorizontal,ChevronRight}from'lucide-react';
+import '../styles/stock-search-layout.css';
 import PageHeader from'../components/PageHeader';import Modal from'../components/Modal';import ConfirmDialog from'../components/ConfirmDialog';import{toast}from'../components/ToastHost';import{addAudit}from'../utils/audit';import{suggestReorder,money}from'../utils/erpEngine';import{safeRead,commitLocalTransaction,STORAGE_KEYS}from'../utils/storage';import{uid}from'../utils/ids';import{can,currentRole}from'../utils/permissions';
 const moduleLabel=p=>{
  const raw=String(p.sizeLabel||p.variant||'').trim();
@@ -129,7 +130,7 @@ export default function Stock({products,setProducts,movements=[],setMovements,sa
       <option value="all">Todos</option><option value="low">Estoque baixo</option><option value="zero">Zerados</option><option value="reserved">Com reserva</option><option value="showroom">Showroom EDN</option><option value="order">Sob encomenda</option><option value="archived">Arquivados</option>
     </select><span>{list.length} variações · {list.reduce((s,p)=>s+Math.max(0,available(p)),0)} un. disponíveis</span>
   </div>
-  <div className="lux-inventory-factory-list">
+  <div className="lux-inventory-factory-list lux-stock-fixed-results">
     {groupedStock.map(group=><section className="lux-inventory-factory" key={group.factory}>
       <div className="lux-inventory-factory-title">
         <div><small>{group.factory==='EDN'?'SHOWROOM LUX DECOR':'ESTOQUE DE ESTOFADOS'}</small><h3>{group.factory}</h3></div>
