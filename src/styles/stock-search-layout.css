@@ -1,0 +1,26 @@
+/* Resultados do estoque ocupam uma área estável enquanto a pesquisa é alterada. */
+.lux-inventory-hub,.lux-inventory-hub>.page,.lux-stock-toolbar{min-width:0}
+.lux-stock-fixed-results{
+  height:clamp(390px,62vh,720px);
+  min-height:390px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  align-content:start;
+  padding-right:4px;
+}
+.lux-stock-fixed-results .lux-inventory-factory,
+.lux-stock-fixed-results .lux-inventory-model,
+.lux-stock-fixed-results .lux-inventory-model-title,
+.lux-stock-fixed-results .lux-inventory-variant{min-width:0;max-width:100%}
+.lux-stock-fixed-results .lux-inventory-model-title h4,
+.lux-stock-fixed-results .lux-inventory-measure,
+.lux-stock-fixed-results .lux-inventory-color{overflow-wrap:anywhere;min-width:0}
+.lux-stock-fixed-results .lux-stock-empty{width:100%;margin:0}
+.lux-stock-toolbar .search{width:100%;max-width:100%;min-width:0;flex:1 1 320px}
+.lux-stock-toolbar .search input{width:100%;min-width:0}
+@media(max-width:700px){
+  .lux-stock-fixed-results{height:55vh;min-height:340px;padding-right:2px}
+  .lux-stock-toolbar .search{flex-basis:100%}
+}
