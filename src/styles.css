@@ -1129,3 +1129,10 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-customer-address-fields .form-field.wide{grid-column:1/-1}
 .lux-customer-legacy-address{grid-column:1/-1;background:#f0f4fa;border:1px solid #dce5ef;border-radius:5px;padding:10px 12px;font-size:12px;line-height:1.45;color:#526d8a}
 @media(max-width:600px){.lux-customer-address-fields .form-field{min-width:0}}
+
+/* Publicação no catálogo Lux Decor: opção simples e acessível. */
+.lux-site-publish-field{display:flex!important;flex-direction:row!important;align-items:flex-start!important;gap:10px;background:#f3f6fa;border:1px solid #d7e0eb;padding:13px 14px;grid-column:1/-1;cursor:pointer}
+.lux-site-publish-field input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin:2px 0 0;accent-color:#244a76}
+.lux-site-publish-field span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.lux-site-publish-field b{font-size:13px;color:#1c334f}
+.lux-site-publish-field small{font-size:11px;line-height:1.45;font-weight:400;color:#526b82}
