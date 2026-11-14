@@ -160,6 +160,19 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const sessionFees=useMemo(()=>Number(sessionSales.reduce((sum,x)=>sum+(Number(x.paymentFees)||0),0).toFixed(2)),[sessionSales]);
   const sessionNet=Number((sessionRevenue-sessionFees).toFixed(2));
   const todayCashSales=useMemo(()=>sales.filter(s=>s.channel==='Caixa'&&s.date===isoToday()&&s.status!=='Cancelada'),[sales]);
+  const todayRevenue=todayCashSales.reduce((sum,s)=>sum+(Number(s.total)||0),0);
+  const dailyPaymentSummary=useMemo(()=>{
+    const groups=new Map();
+    for(const sale of todayCashSales)for(const payment of (sale.paymentDetails?.length?sale.paymentDetails:[{type:sale.payment||'Outros',amount:sale.total}])){
+      const label=payment.type||'Outros';groups.set(label,(groups.get(label)||0)+(Number(payment.amount)||0));
+    }
+    return [...groups.entries()].sort((x,y)=>y[1]-x[1]);
+  },[todayCashSales]);
+  const dailySellerSummary=useMemo(()=>{
+    const groups=new Map();
+    for(const sale of todayCashSales){const label=sale.seller||'Sem vendedor';groups.set(label,(groups.get(label)||0)+(Number(sale.total)||0))}
+    return [...groups.entries()].sort((x,y)=>y[1]-x[1]);
+  },[todayCashSales]);
 
   useEffect(()=>{
     const fn=e=>{
@@ -534,18 +547,18 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     {tab==='history'&&<div className="pdv-history-grid">
       <div className="pdv-history-main">
         <div className="pdv-payment-grid">
-          {paymentSummary.length?paymentSummary.map(([type,value])=>{const Icon=paymentIcon[type]||WalletCards;return <div key={type}><Icon size={17}/><span>{type}</span><b>{money(value)}</b></div>}):<div><WalletCards size={17}/><span>Sem movimento</span><b>{money(0)}</b></div>}
+          {dailyPaymentSummary.length?dailyPaymentSummary.map(([type,value])=>{const Icon=paymentIcon[type]||WalletCards;return <div key={type}><Icon size={17}/><span>{type}</span><b>{money(value)}</b></div>}):<div><WalletCards size={17}/><span>Sem movimento</span><b>{money(0)}</b></div>}
         </div>
         <div className="panel pdv-table-panel">
           <div className="pdv-section-head"><div><b>Vendas de hoje</b><small>{todayCashSales.length} venda(s) do caixa.</small></div></div>
           <div className="pdv-sale-history">{todayCashSales.slice(0,100).map(s=><button key={s.id} onClick={()=>setDetailSale(s)}><span><small>Venda</small><b>#{s.id}</b></span><span><small>Cliente</small><b>{s.client}</b></span><span><small>Pagamento</small><b>{s.payment}</b></span><span><small>Vendedora</small><b>{s.seller||'—'}</b></span><span><small>Total</small><b>{money(s.total)}</b></span><ChevronRight size={16}/></button>)}{!todayCashSales.length&&<p className="empty">Nenhuma venda do caixa hoje.</p>}</div>
         </div>
         <div className="panel pdv-timeline-panel">
-          <div className="pdv-section-head"><div><b>Timeline da sessão</b><small>Abertura, vendas e movimentações do caixa.</small></div></div>
+          <div className="pdv-section-head"><div><b>Movimentações registradas</b><small>Histórico de vendas e movimentações, sem fechamento manual.</small></div></div>
           <div className="pdv-timeline">{sessionLogs.slice(0,30).map(x=><div key={x.id}><i className={`timeline-dot ${x.kind}`}/><span><b>{x.kind==='sale'?`Venda #${x.saleId}`:x.kind==='in'?'Suprimento':x.kind==='out'?'Sangria':x.kind==='open'?'Abertura':'Fechamento'}</b><small>{formatLocalDateTime(x.at)} · {x.seller?`Vendedora: ${x.seller}`:`Operador: ${x.operator||session?.openedBy||operator}`}</small></span><strong>{x.kind==='out'?'- ':''}{money(x.amount||0)}</strong></div>)}</div>
         </div>
       </div>
-      <div className="panel pdv-session-summary"><h3>Resumo da sessão</h3><div><span>Fundo inicial<b>{money(session?.opening||0)}</b></span><span>Vendas totais<b>{money(sessionRevenue)}</b></span><span>Vendas em dinheiro<b>{money(cashSales)}</b></span><span>Suprimentos<b>{money(cashIn)}</b></span><span>Sangrias<b>- {money(cashOut)}</b></span><strong>Dinheiro esperado<b>{money(expected)}</b></strong></div><h4>Vendas por vendedora</h4><div className="pdv-seller-summary">{sellerSummary.length?sellerSummary.map(([name,value])=><span key={name}>{name}<b>{money(value)}</b></span>):<small>Nenhuma venda na sessão.</small>}</div></div>
+      <div className="panel pdv-session-summary"><h3>Resumo de hoje</h3><div><span>Vendas concluídas<b>{todayCashSales.length}</b></span><span>Faturamento do dia<b>{money(todayRevenue)}</b></span><strong>Ticket médio<b>{money(todayCashSales.length?todayRevenue/todayCashSales.length:0)}</b></strong></div><h4>Vendas por vendedor</h4><div className="pdv-seller-summary">{dailySellerSummary.length?dailySellerSummary.map(([name,value])=><span key={name}>{name}<b>{money(value)}</b></span>):<small>Nenhuma venda hoje.</small>}</div></div>
     </div>}
 
     {orderTarget&&<Modal title="Adicionar sob encomenda" subtitle={orderTarget.name} onClose={()=>setOrderTarget(null)}>
