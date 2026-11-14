@@ -7,6 +7,7 @@ import{
   CreditCard,Landmark,ScanLine,X,PackageCheck,Calculator,NotebookText,ArrowLeftRight
 }from'lucide-react';
 import PageHeader from'../components/PageHeader';
+import{eligibleForPdv,pdvProducts}from'../utils/pdvEligibility';
 import Modal from'../components/Modal';
 import ConfirmDialog from'../components/ConfirmDialog';
 import SidePanel from'../components/SidePanel';
@@ -104,11 +105,11 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const[reopenReason,setReopenReason]=useState('');
   const searchRef=useRef(null);
 
-  const categories=useMemo(()=>['Todos',...Array.from(new Set(products.filter(p=>p.active!==false).map(p=>p.category).filter(Boolean))).sort()], [products]);
+  const categories=useMemo(()=>['Todos',...Array.from(new Set(pdvProducts(products).map(p=>p.category).filter(Boolean))).sort()], [products]);
   const filtered=useMemo(()=>{
     const terms=normalizePdvSearch(q).split(' ').filter(Boolean);
     return products.filter(p=>{
-      if(p.active===false)return false;
+      if(!eligibleForPdv(p))return false;
       if(category!=='Todos'&&p.category!==category)return false;
       if(!terms.length)return true;
       const searchable=normalizePdvSearch(`${p.name||''} ${p.sku||''} ${p.reference||''} ${p.category||''} ${p.brand||''} ${p.supplier||''} ${p.variant||''} ${p.color||''} ${p.sizeLabel||''}`);
@@ -191,7 +192,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
 
   const add=(p,confirmedOrder=false)=>{
     if(!session)return toast('Abra o caixa antes de iniciar uma venda.','warning','Caixa fechado');
-    if(p.active===false)return toast('Este produto está arquivado.','warning','Produto indisponível');
+    if(!eligibleForPdv(p))return toast('Apenas peças classificadas como Mostruário podem ser vendidas diretamente no PDV.','warning','Produto indisponível');
     if(availableFor(p)<=0&&!p.madeToOrder)return toast('Produto sem estoque disponível.','warning','Estoque');
     // Itens sem preço podem ser selecionados, com valor informado na etapa de pagamento.
     const order=confirmedOrder||Boolean(p.madeToOrder);
@@ -344,7 +345,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     if(invalidPrice)return toast(`Informe o preço de ${invalidPrice.name} na tela de pagamento antes de concluir a venda.`,'warning','Preço pendente');
     const lacking=cart.find(i=>{
       const p=products.find(x=>String(x.id)===String(i.productId));
-      return !p||p.active===false||(!(p.madeToOrder||isOrderItem(i))&&(p.inventoryPending||availableFor(p)<i.qty));
+      return !eligibleForPdv(p)||(!(p.madeToOrder||isOrderItem(i))&&(p.inventoryPending||availableFor(p)<i.qty));
     });
     if(lacking)return toast(`Estoque insuficiente para ${lacking.name}.`,'warning','Venda bloqueada');
     if(Math.abs(paymentTotal-total)>.01)return toast('A soma dos pagamentos precisa fechar exatamente o total da venda.','warning','Pagamento');
@@ -517,11 +518,11 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     {tab==='sale'&&<div className="pdv-workspace">
       <div className="pdv-left">
         <div className="panel pdv-search-panel">
-          <div className="pdv-search"><Barcode size={20}/><input ref={searchRef} value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar por nome, modelo, cor, medida ou código (F4)" onKeyDown={e=>{if(e.key==='Enter'){const term=q.trim().toLowerCase();const exact=products.find(p=>p.active!==false&&((p.sku||'').toLowerCase()===term||(p.name||'').toLowerCase()===term));if(exact){add(exact);setQ('')}}}}/><button onClick={()=>{setQ('');searchRef.current?.focus()}} title="Limpar busca"><X size={16}/></button></div>
+          <div className="pdv-search"><Barcode size={20}/><input ref={searchRef} value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar mostruário por nome, modelo, cor, medida ou código (F4)" onKeyDown={e=>{if(e.key==='Enter'){const term=q.trim().toLowerCase();const exact=products.find(p=>p.active!==false&&((p.sku||'').toLowerCase()===term||(p.name||'').toLowerCase()===term));if(exact){add(exact);setQ('')}}}}/><button onClick={()=>{setQ('');searchRef.current?.focus()}} title="Limpar busca"><X size={16}/></button></div>
           <div className="pdv-categories">{categories.map(c=><button key={c} className={category===c?'active':''} onClick={()=>setCategory(c)}>{c}</button>)}</div>
         </div>
         <div className="panel pdv-products-panel">
-          <div className="pdv-section-head"><div><b>Produtos</b><small>{filtered.length} resultado(s)</small></div><span>Toque no produto para vender ou solicitar sob encomenda</span></div>
+          <div className="pdv-section-head"><div><b>Mostruário disponível</b><small>{filtered.length} resultado(s)</small></div><span>Toque no produto para vender ou solicitar sob encomenda</span></div>
           <div className="pdv-product-list">{filtered.map(p=>{const available=availableFor(p),low=available<=Number(p.minStock||0);return <button className="pdv-product-row" key={p.id} onClick={()=>add(p)} disabled={!session||(available<=0&&!p.madeToOrder)}><span className="pdv-product-code">{(p.name||'P').slice(0,2).toUpperCase()}</span><span className="pdv-product-main"><b>{p.name}</b><small>{p.sku} · {[p.variant,p.color,p.category||'Sem categoria'].filter(Boolean).join(' · ')}</small></span><span className={`pdv-stock ${low?'low':''}`}><small>{available<=0&&!p.madeToOrder?'Sem estoque':p.madeToOrder||orderNeeded(p)?'Sob encomenda':'Disponível'}</small><b>{available<=0&&!p.madeToOrder?'Indisponível':p.inventoryPending?'Conferir estoque':p.madeToOrder?'Sob pedido':`${available} ${p.unit||'UN'}`}</b></span><strong>{Number(p.price)>0?money(p.price):'Preço pendente'}</strong><Plus size={17}/></button>})}{!filtered.length&&<div className="cash-empty"><Search size={28}/><b>Nenhum produto encontrado</b><span>Revise a busca ou escolha outra categoria.</span></div>}</div>
         </div>
       </div>
