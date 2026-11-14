@@ -1,26 +1,132 @@
-/* Resultados do estoque ocupam uma área estável enquanto a pesquisa é alterada. */
-.lux-inventory-hub,.lux-inventory-hub>.page,.lux-stock-toolbar{min-width:0}
-.lux-stock-fixed-results{
-  height:clamp(390px,62vh,720px);
-  min-height:390px;
+/* Lux Decor | Estoque: largura invariável, independentemente da busca. */
+.lux-inventory-hub{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  align-self:stretch!important;
+}
+.lux-inventory-hub>.page{
+  display:block;
+  flex:1 1 auto;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  align-self:stretch!important;
+  margin-left:0!important;
+  margin-right:0!important;
+}
+.lux-inventory-hub>.page>.module-tabs,
+.lux-inventory-hub>.page>.stock-kpis,
+.lux-inventory-hub>.page>.lux-stock-toolbar,
+.lux-inventory-hub>.page>.lux-stock-fixed-results{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box;
+}
+.lux-inventory-hub .lux-stock-toolbar{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(155px,190px) auto;
+  align-items:center;
+  gap:12px;
+  padding:9px 12px;
+  margin:12px 0 15px!important;
+}
+.lux-inventory-hub .lux-stock-toolbar>.search{
+  box-sizing:border-box;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  margin:0;
+  flex:none;
+  display:flex;
+}
+.lux-inventory-hub .lux-stock-toolbar>.search input{
+  display:block;
+  flex:1 1 auto;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+}
+.lux-inventory-hub .lux-stock-filter{
+  width:100%;
+  min-width:0;
+  margin:0;
+}
+.lux-inventory-hub .lux-stock-results-count{
+  display:block;
+  justify-self:end;
+  min-width:0;
+  max-width:260px;
+  text-align:right;
+  white-space:normal;
+  font-size:12px;
+  color:#536981;
+}
+.lux-inventory-hub .lux-stock-fixed-results{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:16px;
+  height:clamp(420px,65vh,760px);
+  min-height:420px;
   overflow-y:auto;
   overflow-x:hidden;
   overscroll-behavior:contain;
   scrollbar-gutter:stable;
-  align-content:start;
-  padding-right:4px;
+  padding-right:5px;
 }
-.lux-stock-fixed-results .lux-inventory-factory,
-.lux-stock-fixed-results .lux-inventory-model,
-.lux-stock-fixed-results .lux-inventory-model-title,
-.lux-stock-fixed-results .lux-inventory-variant{min-width:0;max-width:100%}
-.lux-stock-fixed-results .lux-inventory-model-title h4,
-.lux-stock-fixed-results .lux-inventory-measure,
-.lux-stock-fixed-results .lux-inventory-color{overflow-wrap:anywhere;min-width:0}
-.lux-stock-fixed-results .lux-stock-empty{width:100%;margin:0}
-.lux-stock-toolbar .search{width:100%;max-width:100%;min-width:0;flex:1 1 320px}
-.lux-stock-toolbar .search input{width:100%;min-width:0}
-@media(max-width:700px){
-  .lux-stock-fixed-results{height:55vh;min-height:340px;padding-right:2px}
-  .lux-stock-toolbar .search{flex-basis:100%}
+.lux-inventory-hub .lux-stock-fixed-results>.lux-inventory-factory{
+  flex:0 0 auto;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+}
+.lux-inventory-hub .lux-stock-fixed-results>.lux-stock-empty{
+  flex:1 0 auto;
+  min-height:190px;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  margin:0;
+}
+.lux-inventory-hub .lux-inventory-model,
+.lux-inventory-hub .lux-inventory-model-title,
+.lux-inventory-hub .lux-inventory-variant{min-width:0;max-width:100%}
+.lux-inventory-hub .lux-inventory-measure,
+.lux-inventory-hub .lux-inventory-color,
+.lux-inventory-hub .lux-inventory-model-title h4{min-width:0;overflow-wrap:anywhere}
+@media(max-width:1000px){
+  .lux-inventory-hub .lux-stock-toolbar{
+    grid-template-columns:minmax(0,1fr) minmax(145px,185px);
+  }
+  .lux-inventory-hub .lux-stock-results-count{
+    grid-column:1/-1;
+    justify-self:start;
+    text-align:left;
+    max-width:none;
+  }
+}
+@media(max-width:650px){
+  .lux-inventory-hub .lux-stock-toolbar{
+    grid-template-columns:minmax(0,1fr);
+    padding:10px;
+    gap:9px;
+  }
+  .lux-inventory-hub .lux-stock-filter,
+  .lux-inventory-hub .lux-stock-results-count{
+    grid-column:1;
+    justify-self:stretch;
+    text-align:left;
+  }
+  .lux-inventory-hub .lux-stock-fixed-results{
+    height:55vh;
+    min-height:340px;
+    padding-right:2px;
+  }
 }
