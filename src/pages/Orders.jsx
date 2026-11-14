@@ -1,6 +1,6 @@
 import React,{useMemo,useState}from'react';
 import{ClipboardCheck,Search,Truck,PackageCheck,Clock3,CheckCircle2,Eye,ArrowRight,MapPin,UserRound,Printer,Save}from'lucide-react';
-import PageHeader from'../components/PageHeader';import Modal from'../components/Modal';import{safeReadArray,safeWrite}from'../utils/storage';import{toast}from'../components/ToastHost';import{addAudit}from'../utils/audit';import{money,isoToday}from'../utils/erpEngine';import{uid}from'../utils/ids';
+import PageHeader from'../components/PageHeader';import Modal from'../components/Modal';import{safeReadArray,commitLocalTransaction}from'../utils/storage';import{toast}from'../components/ToastHost';import{addAudit}from'../utils/audit';import{money,isoToday}from'../utils/erpEngine';import{uid}from'../utils/ids';
 
 const ORDER_KEY='luxdecor-orders-v217';
 const STAGES=['Aguardando separação','Em separação','Pronto','Em rota','Concluído','Cancelado'];
@@ -13,13 +13,30 @@ export default function Orders({sales=[]}){
  const deliveries=safeReadArray('luxdecor-deliveries-v29',[]);
  const list=useMemo(()=>orders.filter(o=>`${o.client||''} ${o.saleId||''} ${o.seller||''} ${(o.items||[]).map(i=>i.name).join(' ')}`.toLowerCase().includes(q.toLowerCase())).filter(o=>filter==='all'||o.status===filter),[orders,q,filter]);
  const stats=useMemo(()=>({open:orders.filter(o=>!['Concluído','Cancelado'].includes(o.status)).length,separating:orders.filter(o=>o.status==='Em separação').length,ready:orders.filter(o=>o.status==='Pronto').length,delivery:orders.filter(o=>o.fulfillment==='Entrega'&&!['Concluído','Cancelado'].includes(o.status)).length}),[orders]);
- const persist=next=>{setOrders(next);safeWrite(ORDER_KEY,next)};
- const advance=o=>{const status=nextStage(o.status);if(status===o.status)return;const now=new Date().toISOString();const next=orders.map(x=>x.id===o.id?{...x,status,updatedAt:now}:x);persist(next);const ds=safeReadArray('luxdecor-deliveries-v29',[]);if(o.fulfillment==='Entrega'){const map={'Em separação':'Em separação','Pronto':'Agendada','Em rota':'Em rota','Concluído':'Entregue'};if(map[status])safeWrite('luxdecor-deliveries-v29',ds.map(d=>String(d.saleId)===String(o.saleId)?{...d,status:map[status]}:d))}addAudit('Etapa do pedido alterada','Pedidos',`Venda #${o.saleId} · ${o.status} → ${status}`);toast(`Pedido movido para ${status}.`,'success','Pedidos')};
+ const persist=async(next,nextDeliveries)=>{
+   const changes={[ORDER_KEY]:next,...(nextDeliveries?{'luxdecor-deliveries-v29':nextDeliveries}:{})};
+   const tx=await commitLocalTransaction('orders-update',changes);
+   if(!tx.ok){toast('Não foi possível confirmar a atualização do pedido. Tente novamente.','warning','Pedidos');return false}
+   setOrders(next);return true;
+ };
+ const advance=async o=>{
+   const status=nextStage(o.status);if(status===o.status)return;
+   const now=new Date().toISOString();
+   const next=orders.map(x=>x.id===o.id?{...x,status,updatedAt:now}:x);
+   let deliveries=null;
+   if(o.fulfillment==='Entrega'){
+     const map={'Em separação':'Em separação','Pronto':'Agendada','Em rota':'Em rota','Concluído':'Entregue'};
+     if(map[status])deliveries=safeReadArray('luxdecor-deliveries-v29',[]).map(d=>String(d.saleId)===String(o.saleId)?{...d,status:map[status],updatedAt:now}:d);
+   }
+   if(!await persist(next,deliveries))return;
+   addAudit('Etapa do pedido alterada','Pedidos',`Venda #${o.saleId} · ${o.status} → ${status}`);
+   toast(`Pedido movido para ${status}.`,'success','Pedidos');
+ };
 
  const saleFor=o=>sales.find(s=>String(s.id)===String(o.saleId));
  const deliveryFor=o=>safeReadArray('luxdecor-deliveries-v29',[]).find(d=>String(d.saleId)===String(o.saleId));
  const openDetails=o=>{setDetail(o);const d=deliveryFor(o)||{};setDeliveryForm({date:d.date||'',window:d.window||'08:00–12:00',address:d.address||o.clientAddress||'',phone:d.phone||o.clientPhone||'',driver:d.driver||'',team:d.team||'',region:d.region||'',occurrence:d.occurrence||''})};
- const saveDelivery=()=>{
+ const saveDelivery=async()=>{
   if(!detail||detail.fulfillment!=='Entrega'||!deliveryForm)return;
   if(!deliveryForm.date||!deliveryForm.address.trim())return toast('Informe a data e o endereço da entrega.','warning','Pedidos');
   const current=safeReadArray('luxdecor-deliveries-v29',[]);
@@ -28,9 +45,9 @@ export default function Orders({sales=[]}){
   const base=index>=0?current[index]:{id:uid('del'),saleId:detail.saleId,client:detail.client,items:detail.items||[],createdAt:now,status:'Agendada'};
   const record={...base,...deliveryForm,updatedAt:now};
   const updated=index>=0?current.map((d,i)=>i===index?record:d):[record,...current];
-  safeWrite('luxdecor-deliveries-v29',updated);
   const next=orders.map(o=>o.id===detail.id?{...o,clientAddress:deliveryForm.address,clientPhone:deliveryForm.phone,updatedAt:now}:o);
-  persist(next);setDetail(next.find(o=>o.id===detail.id));
+  if(!await persist(next,updated))return;
+  setDetail(next.find(o=>o.id===detail.id));
   addAudit('Entrega programada','Pedidos','Venda #'+detail.saleId+' · '+deliveryForm.date);
   toast('Programação salva com sucesso.','success','Pedidos');
  };
