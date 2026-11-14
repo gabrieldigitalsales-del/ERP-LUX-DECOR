@@ -126,9 +126,9 @@ export default function Stock({products,setProducts,movements=[],setMovements,sa
  {tab==='overview'&&<>
   <div className="toolbar lux-stock-toolbar">
     <label className="search"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar modelo, fábrica, módulo, código ou cor..."/></label>
-    <select className="period-input" value={filter} onChange={e=>setFilter(e.target.value)}>
+    <select aria-label="Filtrar estoque" className="period-input lux-stock-filter" value={filter} onChange={e=>setFilter(e.target.value)}>
       <option value="all">Todos</option><option value="low">Estoque baixo</option><option value="zero">Zerados</option><option value="reserved">Com reserva</option><option value="showroom">Showroom EDN</option><option value="order">Sob encomenda</option><option value="archived">Arquivados</option>
-    </select><span>{list.length} variações · {list.reduce((s,p)=>s+Math.max(0,available(p)),0)} un. disponíveis</span>
+    </select><span className="lux-stock-results-count" aria-live="polite">{list.length} variações · {list.reduce((s,p)=>s+Math.max(0,available(p)),0)} un. disponíveis</span>
   </div>
   <div className="lux-inventory-factory-list lux-stock-fixed-results">
     {groupedStock.map(group=><section className="lux-inventory-factory" key={group.factory}>
