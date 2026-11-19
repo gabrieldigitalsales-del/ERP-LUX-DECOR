@@ -8,12 +8,13 @@
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "node scripts/critical-regression.mjs && node scripts/p0-regression.mjs && node scripts/release-check.mjs && vite build",
+    "build": "node scripts/critical-regression.mjs && node scripts/p0-regression.mjs && node scripts/sale-dry-run.mjs && node scripts/release-check.mjs && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "audit": "node scripts/static-audit.mjs",
     "test:release": "node scripts/release-check.mjs",
     "test:critical": "node scripts/critical-regression.mjs",
-    "test:p0": "node scripts/p0-regression.mjs"
+    "test:p0": "node scripts/p0-regression.mjs",
+    "test:sale": "node scripts/sale-dry-run.mjs"
   },
   "dependencies": {
     "react": "19.1.1",
