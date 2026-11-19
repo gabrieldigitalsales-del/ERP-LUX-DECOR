@@ -1136,3 +1136,15 @@ button:not(:disabled):focus-visible,a:focus-visible,input:focus-visible,select:f
 .lux-site-publish-field span{display:flex;flex-direction:column;gap:4px;min-width:0}
 .lux-site-publish-field b{font-size:13px;color:#1c334f}
 .lux-site-publish-field small{font-size:11px;line-height:1.45;font-weight:400;color:#526b82}
+
+/* Balcão Lux Decor: melhorias contidas exclusivamente na página Caixa. */
+.cashier-page .pdv-balcao-history-shortcut{display:flex;align-items:center;gap:10px;justify-content:center;min-height:54px;padding:11px 18px;border:1px solid rgba(24,55,83,.2);background:#fff;color:#183754;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;transition:background .15s,transform .15s}
+.cashier-page .pdv-balcao-history-shortcut:hover{background:#f2f6f9;transform:translateY(-1px)}
+.cashier-page .pdv-balcao-history-shortcut:focus-visible{outline:2px solid #183754;outline-offset:2px}
+.cashier-page .pdv-balcao-history-filters{display:flex;gap:10px;align-items:center;padding:12px 15px;border-bottom:1px solid rgba(22,52,82,.1)}
+.cashier-page .pdv-balcao-history-search{flex:1;min-width:160px;display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid #d5dfe6;background:#fff;border-radius:6px;color:#697b8b}
+.cashier-page .pdv-balcao-history-search input{min-width:0;width:100%;border:0;outline:0;background:transparent;color:#19354e;font-size:12px}
+.cashier-page .pdv-balcao-history-filters select{min-height:39px;max-width:180px;padding:8px 10px;border:1px solid #d5dfe6;background:#fff;color:#19354e;border-radius:6px;font-size:12px}
+.cashier-page .pdv-balcao-history-note{display:block;padding:14px;color:#697b8b;font-size:11px}
+@media(max-width:760px){.cashier-page .pdv-balcao-history-filters{flex-direction:column;align-items:stretch}.cashier-page .pdv-balcao-history-filters select{max-width:none;width:100%}.cashier-page .pdv-balcao-history-shortcut{min-height:46px}}
+@media(prefers-reduced-motion:reduce){.cashier-page .pdv-balcao-history-shortcut{transition:none;transform:none!important}}
