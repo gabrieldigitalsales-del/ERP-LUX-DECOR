@@ -78,6 +78,8 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const[notes,setNotes]=useState('');
   const[cart,setCart]=useState([]);
   const[tab,setTab]=useState('sale');
+  const[historyQuery,setHistoryQuery]=useState('');
+  const[historyPeriod,setHistoryPeriod]=useState('today');
   const[openModal,setOpenModal]=useState(false);
   const[closeModal,setCloseModal]=useState(false);
   const[cashMove,setCashMove]=useState(null);
@@ -163,6 +165,13 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const sessionNet=Number((sessionRevenue-sessionFees).toFixed(2));
   const todayCashSales=useMemo(()=>sales.filter(s=>s.channel==='Caixa'&&s.date===isoToday()&&s.status!=='Cancelada'),[sales]);
   const todayRevenue=todayCashSales.reduce((sum,s)=>sum+(Number(s.total)||0),0);
+  const historySales=useMemo(()=>{
+    const term=normalizePdvSearch(historyQuery);
+    return sales.filter(s=>s.channel==='Caixa' && (historyPeriod==='all'||historyPeriod==='today'&&s.date===isoToday()||historyPeriod==='month'&&String(s.date||'').slice(0,7)===isoToday().slice(0,7)))
+      .filter(s=>!term||normalizePdvSearch([s.id,s.client,s.seller,s.payment,...(s.items||[]).map(i=>i.name)].join(' ')).includes(term))
+      .sort((a,b)=>String(b.createdAt||b.date||'').localeCompare(String(a.createdAt||a.date||'')));
+  },[sales,historyQuery,historyPeriod]);
+  const historyTotal=historySales.filter(s=>s.status!=='Cancelada'&&s.status!=='Cancelado').reduce((sum,s)=>sum+(Number(s.total)||0),0);
   const dailyPaymentSummary=useMemo(()=>{
     const groups=new Map();
     for(const sale of todayCashSales)for(const payment of (sale.paymentDetails?.length?sale.paymentDetails:[{type:sale.payment||'Outros',amount:sale.total}])){
@@ -496,22 +505,21 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
   const clearSale=()=>{resetSale();setConfirmClear(false);toast('Venda atual limpa.','info','Caixa')};
 
   return <section className="page cashier-page cashier-v26">
-    <PageHeader title="Vendas / PDV" subtitle="Registre vendas de móveis diretamente, sem abrir ou fechar caixa. Histórico e recebimentos permanecem registrados."/>
+    <PageHeader title="Caixa da loja" subtitle="Atenda, registre a venda e consulte os comprovantes. Os detalhes administrativos continuam nas outras abas."/>
 
     <div className="pdv-topline">
       <div className="pdv-session-card is-open"><span className="pdv-led"/><div><small>PRONTO PARA VENDER</small><b>PDV Lux Decor</b></div></div>
-      <div className="pdv-metric"><UserRound/><span><small>Operador</small><b>{operator}</b></span></div>
-      <div className="pdv-metric"><CircleDollarSign/><span><small>Vendas de hoje</small><b>{money(todayCashSales.reduce((sum,s)=>sum+(Number(s.total)||0),0))}</b></span></div>
-      <div className="pdv-metric"><ReceiptText/><span><small>Vendas de hoje</small><b>{todayCashSales.length}</b></span></div>
-      <div className="pdv-metric"><Calculator/><span><small>Ticket médio de hoje</small><b>{money(todayCashSales.length?todayCashSales.reduce((sum,s)=>sum+(Number(s.total)||0),0)/todayCashSales.length:0)}</b></span></div>
+      <div className="pdv-metric"><CircleDollarSign/><span><small>Total vendido hoje</small><b>{money(todayRevenue)}</b></span></div>
+      <div className="pdv-metric"><ReceiptText/><span><small>Vendas concluídas hoje</small><b>{todayCashSales.length}</b></span></div>
+      <button type="button" className="pdv-balcao-history-shortcut" onClick={()=>{setHistoryPeriod('today');setTab('history')}}><History size={17}/><span>Consultar vendas</span><ChevronRight size={16}/></button>
     </div>
 
     <div className="pdv-simple-guide"><span><b>1</b> Escolha os produtos</span><ChevronRight size={14}/><span><b>2</b> Informe vendedora e cliente</span><ChevronRight size={14}/><span><b>3</b> Receba e finalize</span></div>
     <div className="pdv-toolbar">
       <div className="cash-tabs pdv-tabs">
-        <button className={tab==='sale'?'active':''} onClick={()=>setTab('sale')}><ShoppingBag size={16}/>Venda</button>
+        <button className={tab==='sale'?'active':''} onClick={()=>setTab('sale')}><ShoppingBag size={16}/>Nova venda</button>
         <button className={tab==='held'?'active':''} onClick={()=>setTab('held')}><PauseCircle size={16}/>Suspensas <em>{held.length}</em></button>
-        <button className={tab==='history'?'active':''} onClick={()=>setTab('history')}><History size={16}/>Histórico</button>
+        <button className={tab==='history'?'active':''} onClick={()=>setTab('history')}><History size={16}/>Histórico de vendas</button>
       </div>
       <div className="pdv-shortcuts"><span><kbd>F4</kbd> Buscar</span><span><kbd>F6</kbd> Cliente</span><span><kbd>F8</kbd> Pagamento</span><span><kbd>F9</kbd> Suspender</span></div>
     </div>
@@ -519,7 +527,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
     {tab==='sale'&&<div className="pdv-workspace">
       <div className="pdv-left">
         <div className="panel pdv-search-panel">
-          <div className="pdv-search"><Barcode size={20}/><input ref={searchRef} value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar mostruário por nome, modelo, cor, medida ou código (F4)" onKeyDown={e=>{if(e.key==='Enter'){const term=q.trim().toLowerCase();const exact=products.find(p=>p.active!==false&&((p.sku||'').toLowerCase()===term||(p.name||'').toLowerCase()===term));if(exact){add(exact);setQ('')}}}}/><button onClick={()=>{setQ('');searchRef.current?.focus()}} title="Limpar busca"><X size={16}/></button></div>
+          <div className="pdv-search"><Barcode size={20}/><input ref={searchRef} value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar mostruário por nome, modelo, cor, medida ou código (F4)" onKeyDown={e=>{if(e.key==='Enter'){const term=q.trim().toLowerCase();const exact=filtered.find(p=>((p.sku||'').toLowerCase()===term||(p.name||'').toLowerCase()===term));if(exact){add(exact);setQ('')}}}}/><button onClick={()=>{setQ('');searchRef.current?.focus()}} title="Limpar busca"><X size={16}/></button></div>
           <div className="pdv-categories">{categories.map(c=><button key={c} className={category===c?'active':''} onClick={()=>setCategory(c)}>{c}</button>)}</div>
         </div>
         <div className="panel pdv-products-panel">
@@ -552,8 +560,12 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
           {dailyPaymentSummary.length?dailyPaymentSummary.map(([type,value])=>{const Icon=paymentIcon[type]||WalletCards;return <div key={type}><Icon size={17}/><span>{type}</span><b>{money(value)}</b></div>}):<div><WalletCards size={17}/><span>Sem movimento</span><b>{money(0)}</b></div>}
         </div>
         <div className="panel pdv-table-panel">
-          <div className="pdv-section-head"><div><b>Vendas de hoje</b><small>{todayCashSales.length} venda(s) do caixa.</small></div></div>
-          <div className="pdv-sale-history">{todayCashSales.slice(0,100).map(s=><button key={s.id} onClick={()=>setDetailSale(s)}><span><small>Venda</small><b>#{s.id}</b></span><span><small>Cliente</small><b>{s.client}</b></span><span><small>Pagamento</small><b>{s.payment}</b></span><span><small>Vendedora</small><b>{s.seller||'—'}</b></span><span><small>Total</small><b>{money(s.total)}</b></span><ChevronRight size={16}/></button>)}{!todayCashSales.length&&<p className="empty">Nenhuma venda do caixa hoje.</p>}</div>
+          <div className="pdv-section-head"><div><b>Histórico de vendas</b><small>{historySales.length} venda(s) encontrada(s) · Total: {money(historyTotal)}</small></div></div>
+          <div className="pdv-balcao-history-filters">
+            <label className="pdv-balcao-history-search"><Search size={17}/><input aria-label="Buscar vendas por número, cliente, vendedor ou produto" placeholder="Buscar venda, cliente, vendedor ou móvel" value={historyQuery} onChange={e=>setHistoryQuery(e.target.value)}/></label>
+            <select aria-label="Período das vendas" value={historyPeriod} onChange={e=>setHistoryPeriod(e.target.value)}><option value="today">Hoje</option><option value="month">Este mês</option><option value="all">Todo o histórico</option></select>
+          </div>
+          <div className="pdv-sale-history">{historySales.slice(0,100).map(s=><button key={s.id} onClick={()=>setDetailSale(s)}><span><small>Venda</small><b>#{s.id}</b></span><span><small>Data</small><b>{String(s.date||'').split('-').reverse().join('/')||'—'}</b></span><span><small>Cliente</small><b>{s.client}</b></span><span><small>Pagamento</small><b>{s.payment}</b></span><span><small>Status</small><b>{s.status||'—'}</b></span><span><small>Total</small><b>{money(s.total)}</b></span><ChevronRight size={16}/></button>)}{!historySales.length&&<p className="empty">Nenhuma venda encontrada neste período.</p>}{historySales.length>100&&<small className="pdv-balcao-history-note">Exibindo as 100 vendas mais recentes. Use a busca para localizar outras.</small>}</div>
         </div>
         <div className="panel pdv-timeline-panel">
           <div className="pdv-section-head"><div><b>Movimentações registradas</b><small>Histórico de vendas e movimentações, sem fechamento manual.</small></div></div>
@@ -611,7 +623,7 @@ export default function Cashier({sales,setSales,products,setProducts,clients,set
           <span>Subtotal <b>{money(gross)}</b></span><span>Desconto <b>- {money(discount)}</b></span><strong>TOTAL <em>{money(total)}</em></strong>
           <div className="pdv-summary-payments">{paymentRows.map((p,i)=>{const preview=paymentPreview(p);return <div key={`${p.type}-${i}`}><span>{p.type}{p.type==='Cartão de crédito'?` · ${preview.installments}x`:''}</span><b>{money(preview.amount)}</b>{p.type==='Cartão de crédito'&&<small>{preview.installments}x de {money(preview.installmentValue)} · líquido {money(preview.net)}</small>}</div>})}</div>
           <span className={Math.abs(paymentTotal-total)<.01?'ok-line':'warn-line'}>Pagamentos <b>{money(paymentTotal)}</b></span>{remaining>0&&<span className="warn-line">Falta pagar <b>{money(remaining)}</b></span>}{paymentTotal>total+.01&&<span className="warn-line">Excedente <b>{money(paymentTotal-total)}</b></span>}{cashPart>0&&<span>Troco <b>{money(change)}</b></span>}
-          <div className="pdv-checkout-protection"><ShieldCheck size={19}/><div><b>Operação protegida</b><small>Os registros são gravados neste navegador. Confira o pagamento e o estoque antes de confirmar.</small></div></div>
+          <div className="pdv-checkout-protection"><ShieldCheck size={19}/><div><b>Operação protegida</b><small>Venda, estoque, financeiro e pedido são enviados juntos para gravação. Confira os valores antes de confirmar.</small></div></div>
           <div className="pdv-checkout-actions"><button className="secondary" onClick={()=>setCheckoutOpen(false)} disabled={finalizing}>Voltar para venda</button><button className="pdv-confirm-sale" onClick={finalize} disabled={finalizing||total<=0||cart.some(i=>!(Number(i.price)>0))||Math.abs(paymentTotal-total)>.01}>{finalizing?'PROCESSANDO...':'FINALIZAR VENDA'}</button></div>
         </div>
       </div>
