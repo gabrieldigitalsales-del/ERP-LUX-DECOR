@@ -15,9 +15,9 @@ export const luxInventoryProducts=currentStock.map((r,index)=>{
     variant:r.module,color:r.color,sizeLabel:r.module,
     stock:pending?0:r.quantity,stockConfirmed:!pending,inventoryPending:pending,
     stockType:r.showroom?'Mostruário':'Estoque',location:r.showroom?'Showroom Lux Decor':'Estoque de estofados',
-    reserved:0,minStock:0,unit:'UN',price:0,cost:0,
+    reserved:r.factory==='LUART'&&r.model==='Nevada'&&r.color==='AB 203'?1:0,minStock:0,unit:'UN',price:0,cost:0,
     notes:observations,description:`${label} · ${r.module} · ${r.color}`,
-    active:true,inventorySource:'Relação de estoque Lux Decor (04/11/2026)',
+    active:true,inventorySource:'Inventário depósito Lux Decor | Home Interiores (18/11/2026)',
     importedFromLuxInventory:true
   };
 });
