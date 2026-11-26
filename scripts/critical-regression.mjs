@@ -48,7 +48,12 @@ assert.equal(restored.supplier,'Novo','Fornecedor editado não pode regredir');
 assert.equal(restored.color,'Areia','Cor editada deve persistir');
 
 const inventory=JSON.parse(read('src/data/luxCurrentStock.json'));
-assert.equal(inventory.length,54,'As 54 variações originais devem estar no catálogo');
+assert.equal(inventory.length,53,'O catálogo de referência deve manter 34 variantes conferidas e 19 registros de outras linhas');
+const factoryUnits=factory=>inventory.filter(p=>p.factory===factory&&p.quantity!==null).reduce((n,p)=>n+Number(p.quantity),0);
+assert.equal(factoryUnits('LUART'),40,'O inventário de 18/11 deve somar 40 unidades LUART');
+assert.equal(factoryUnits('BOARETO'),9,'O inventário de 18/11 deve somar 9 unidades BOARETO');
+const nevadaReserved=inventory.find(p=>p.factory==='LUART'&&p.model==='Nevada'&&p.module==='100'&&p.color==='AB 203');
+assert.ok(nevadaReserved&&/Encomenda/i.test(nevadaReserved.notes),'Nevada AB 203 deve estar identificado como encomenda');
 const storage=read('src/utils/storage.js');
 const boot=storage.split('export function bootstrapStorage(){')[1]?.split('export function storageHealth()')[0]||'';
 assert.ok(boot.includes("if(!safeRead('luxdecor-inventory-initialized-v1',null))migrateLuxInventory()"),'Importação inicial deve acontecer uma única vez');
